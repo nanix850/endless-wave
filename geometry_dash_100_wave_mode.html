@@ -1,0 +1,1674 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full bg-slate-950 text-white select-none overflow-hidden">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Geometry Dash - 100% Wave Edition</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Pusab&family=Rajdhani:wght@600;700;900&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+            touch-action: manipulation;
+        }
+        .font-gd {
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 900;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 0 4px 10px rgba(0,0,0,0.7);
+        }
+        .neon-box {
+            box-shadow: 0 0 15px currentColor;
+        }
+        .neon-text {
+            text-shadow: 0 0 10px currentColor;
+        }
+        /* Custom scrollbars for editor */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 4px;
+        }
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.05); }
+        }
+        .animate-pulse-glow {
+            animation: pulseGlow 2s infinite ease-in-out;
+        }
+    </style>
+</head>
+<body class="h-full w-full flex flex-col justify-center items-center bg-slate-950 overflow-hidden">
+
+    <!-- MAIN MENU -->
+    <div id="main-menu" class="absolute inset-0 flex flex-col justify-between items-center p-6 z-20 bg-gradient-to-b from-slate-900 via-indigo-950 to-slate-950">
+        <!-- Title Banner -->
+        <div class="mt-8 text-center animate-pulse-glow">
+            <h1 class="text-5xl md:text-7xl font-gd text-cyan-400 tracking-wider transform -skew-x-6">
+                GEOMETRY DASH
+            </h1>
+            <div class="text-2xl md:text-3xl font-gd text-yellow-400 mt-1 tracking-widest">
+                WAVE 100% EDITION
+            </div>
+        </div>
+
+        <!-- Wave Arrow Preview Showcase -->
+        <div class="relative my-4 flex justify-center items-center">
+            <canvas id="menuPreviewCanvas" width="160" height="120" class="rounded-xl border-2 border-cyan-500/30 bg-slate-900/60 shadow-lg shadow-cyan-500/20"></canvas>
+            <button id="btn-quick-garage" onclick="openGarage()" class="absolute -bottom-3 bg-cyan-600 hover:bg-cyan-500 text-xs font-bold px-3 py-1 rounded-full border border-cyan-300 shadow">
+                <i class="fa-solid fa-paintbrush mr-1"></i> MON GARAGE
+            </button>
+        </div>
+
+        <!-- Main Action Buttons -->
+        <div class="flex flex-col md:flex-row gap-4 w-full max-w-md justify-center items-center">
+            <button onclick="openLevelSelect()" class="w-full py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-2xl font-gd rounded-2xl border-4 border-green-300 shadow-lg shadow-green-500/40 transform active:scale-95 transition">
+                <i class="fa-solid fa-play mr-2"></i> NIVEAUX OFFICIELS
+            </button>
+            <button onclick="startEndlessMode()" class="w-full py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-2xl font-gd rounded-2xl border-4 border-purple-300 shadow-lg shadow-purple-500/40 transform active:scale-95 transition">
+                <i class="fa-solid fa-infinity mr-2"></i> MODE ENDLESS
+            </button>
+        </div>
+
+        <!-- Secondary Buttons Bottom Bar -->
+        <div class="flex gap-4 mb-6">
+            <button onclick="openGarage()" class="p-4 bg-slate-800 hover:bg-slate-700 text-cyan-400 rounded-2xl border-2 border-cyan-500/50 shadow-md flex flex-col items-center justify-center w-24 h-24 transform active:scale-95 transition">
+                <i class="fa-solid fa-shuttle-space text-3xl mb-1"></i>
+                <span class="text-xs font-bold">GARAGE</span>
+            </button>
+            <button onclick="openEditor()" class="p-4 bg-slate-800 hover:bg-slate-700 text-yellow-400 rounded-2xl border-2 border-yellow-500/50 shadow-md flex flex-col items-center justify-center w-24 h-24 transform active:scale-95 transition">
+                <i class="fa-solid fa-wrench text-3xl mb-1"></i>
+                <span class="text-xs font-bold">ÉDITEUR</span>
+            </button>
+            <button onclick="openCustomLevelsModal()" class="p-4 bg-slate-800 hover:bg-slate-700 text-pink-400 rounded-2xl border-2 border-pink-500/50 shadow-md flex flex-col items-center justify-center w-24 h-24 transform active:scale-95 transition">
+                <i class="fa-solid fa-folder-open text-3xl mb-1"></i>
+                <span class="text-xs font-bold">MES MAPS</span>
+            </button>
+            <button id="btn-audio-toggle" onclick="toggleAudio()" class="p-4 bg-slate-800 hover:bg-slate-700 text-emerald-400 rounded-2xl border-2 border-emerald-500/50 shadow-md flex flex-col items-center justify-center w-24 h-24 transform active:scale-95 transition">
+                <i id="audio-icon" class="fa-solid fa-volume-high text-3xl mb-1"></i>
+                <span id="audio-label" class="text-xs font-bold">SON: ON</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- LEVEL SELECT MODAL -->
+    <div id="level-select-modal" class="hidden absolute inset-0 z-30 bg-slate-950/95 flex flex-col justify-between p-6 backdrop-blur-md">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+            <h2 class="text-3xl font-gd text-cyan-400"><i class="fa-solid fa-trophy mr-2"></i> SÉLECTION DU NIVEAU</h2>
+            <button onclick="closeModals()" class="text-slate-400 hover:text-white text-3xl font-bold"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- Level Cards Slider Container -->
+        <div class="flex-1 flex items-center justify-center overflow-x-auto gap-6 py-6 px-4" id="level-cards-container">
+            <!-- Level cards injected via JS -->
+        </div>
+
+        <div class="flex justify-center pb-4">
+            <button onclick="closeModals()" class="px-8 py-3 bg-slate-800 hover:bg-slate-700 font-gd rounded-xl border border-slate-600 text-lg">
+                RETOUR AU MENU
+            </button>
+        </div>
+    </div>
+
+    <!-- CUSTOM LEVELS MODAL -->
+    <div id="custom-levels-modal" class="hidden absolute inset-0 z-30 bg-slate-950/95 flex flex-col justify-between p-6 backdrop-blur-md">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+            <h2 class="text-3xl font-gd text-pink-400"><i class="fa-solid fa-folder-open mr-2"></i> NIVEAUX PERSONNALISÉS</h2>
+            <button onclick="closeModals()" class="text-slate-400 hover:text-white text-3xl font-bold"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div id="custom-levels-list" class="flex-1 overflow-y-auto my-4 space-y-3 px-2">
+            <!-- Custom levels rendered here -->
+        </div>
+
+        <div class="flex justify-center gap-4 pb-2">
+            <button onclick="openEditor()" class="px-6 py-3 bg-yellow-600 hover:bg-yellow-500 font-gd rounded-xl border border-yellow-400 text-lg">
+                <i class="fa-solid fa-plus mr-2"></i> CRÉER UN NIVEAU
+            </button>
+            <button onclick="closeModals()" class="px-6 py-3 bg-slate-800 hover:bg-slate-700 font-gd rounded-xl border border-slate-600 text-lg">
+                RETOUR
+            </button>
+        </div>
+    </div>
+
+    <!-- GARAGE MODAL -->
+    <div id="garage-modal" class="hidden absolute inset-0 z-30 bg-slate-950/95 flex flex-col justify-between p-6 backdrop-blur-md">
+        <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+            <h2 class="text-3xl font-gd text-cyan-400"><i class="fa-solid fa-shuttle-space mr-2"></i> GARAGE WAVE</h2>
+            <button onclick="closeModals()" class="text-slate-400 hover:text-white text-3xl font-bold"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="flex-1 flex flex-col md:flex-row items-center justify-center gap-8 py-4 overflow-y-auto">
+            <!-- Large Canvas Preview -->
+            <div class="flex flex-col items-center">
+                <div class="p-4 bg-slate-900 border-2 border-cyan-500/50 rounded-2xl shadow-xl shadow-cyan-500/20">
+                    <canvas id="garageCanvas" width="280" height="200" class="rounded-lg bg-slate-950"></canvas>
+                </div>
+                <div class="mt-3 text-cyan-300 font-bold text-lg" id="garage-skin-name">Skin Par Défaut</div>
+            </div>
+
+            <!-- Customization Controls -->
+            <div class="flex flex-col gap-5 max-w-md w-full bg-slate-900/80 p-5 rounded-2xl border border-slate-800">
+                <!-- Skins Grid -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">FORME DU WAVE</label>
+                    <div class="grid grid-cols-5 gap-2" id="skins-selector">
+                        <!-- Skin icons injected JS -->
+                    </div>
+                </div>
+
+                <!-- Primary Color -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">COULEUR PRINCIPALE</label>
+                    <div class="flex gap-2 flex-wrap" id="primary-colors"></div>
+                </div>
+
+                <!-- Secondary Color -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">COULEUR SECONDAIRE</label>
+                    <div class="flex gap-2 flex-wrap" id="secondary-colors"></div>
+                </div>
+
+                <!-- Trail Effect -->
+                <div>
+                    <label class="block text-sm font-bold text-slate-400 mb-2">EFFET DE TRAÎNÉE</label>
+                    <div class="grid grid-cols-4 gap-2" id="trail-selector"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="flex justify-center pb-2">
+            <button onclick="closeModals()" class="px-8 py-3 bg-cyan-600 hover:bg-cyan-500 font-gd rounded-xl border border-cyan-300 text-lg shadow-lg">
+                SAUVEGARDER ET FERMER
+            </button>
+        </div>
+    </div>
+
+    <!-- GAME CONTAINER -->
+    <div id="game-container" class="relative w-full h-full hidden flex flex-col justify-center items-center">
+        <!-- Top Gameplay Bar / HUD -->
+        <div class="absolute top-0 left-0 right-0 z-10 flex flex-col p-3 bg-gradient-to-b from-slate-950/80 to-transparent pointer-events-none">
+            <div class="flex justify-between items-center px-2">
+                <!-- Level Info & Attempt -->
+                <div class="flex items-center gap-3">
+                    <span id="hud-level-title" class="font-gd text-xl text-yellow-400 drop-shadow">Wave Madness</span>
+                    <span id="hud-attempt" class="bg-slate-800/80 text-xs px-2 py-1 rounded border border-slate-700 text-slate-300">Essai 1</span>
+                </div>
+
+                <!-- Practice Mode Controls Indicator -->
+                <div id="practice-hud" class="hidden flex items-center gap-2 pointer-events-auto">
+                    <span class="text-xs font-bold text-green-400 bg-green-950/80 px-2 py-1 rounded border border-green-500"><i class="fa-solid fa-bookmark mr-1"></i> MODE ENTRAÎNEMENT</span>
+                    <button onclick="addPracticeCheckpoint()" class="px-3 py-1 bg-green-600 hover:bg-green-500 text-xs font-bold rounded border border-green-300 shadow active:scale-95">
+                        + Checkpoint (Z)
+                    </button>
+                    <button onclick="removePracticeCheckpoint()" class="px-3 py-1 bg-red-600 hover:bg-red-500 text-xs font-bold rounded border border-red-300 shadow active:scale-95">
+                        - Supprimer (X)
+                    </button>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex items-center gap-2 pointer-events-auto">
+                    <button onclick="togglePracticeMode()" id="btn-practice-toggle" class="p-2 bg-slate-800/80 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-slate-300">
+                        <i class="fa-solid fa-diamond"></i>
+                    </button>
+                    <button onclick="pauseGame()" class="p-2 bg-slate-800/80 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-slate-300">
+                        <i class="fa-solid fa-pause"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-slate-900/80 h-4 rounded-full border border-slate-700 overflow-hidden mt-2 relative">
+                <div id="hud-progress-fill" class="bg-gradient-to-r from-cyan-500 via-green-400 to-yellow-400 h-full w-0 transition-all duration-75"></div>
+                <span id="hud-progress-text" class="absolute inset-0 flex items-center justify-center text-[10px] font-gd text-white drop-shadow">0%</span>
+            </div>
+        </div>
+
+        <!-- Gameplay Canvas -->
+        <canvas id="gameCanvas" class="w-full h-full bg-slate-950 cursor-pointer"></canvas>
+
+        <!-- Touch Area Visual feedback for Mobile -->
+        <div class="absolute bottom-4 left-4 right-4 md:hidden pointer-events-none text-center text-xs text-slate-500/70">
+            Maintiens l'écran enfoncé pour Monter | Relâche pour Descendre
+        </div>
+    </div>
+
+    <!-- PAUSE MENU MODAL -->
+    <div id="pause-modal" class="hidden absolute inset-0 z-40 bg-slate-950/80 backdrop-blur-md flex flex-col justify-center items-center">
+        <div class="bg-slate-900 border-2 border-cyan-500 p-8 rounded-2xl max-w-sm w-full text-center shadow-2xl">
+            <h2 class="text-3xl font-gd text-cyan-400 mb-6">PAUSE</h2>
+            <div class="flex flex-col gap-4">
+                <button onclick="resumeGame()" class="py-3 bg-green-600 hover:bg-green-500 font-gd rounded-xl text-xl shadow">
+                    REPRENDRE
+                </button>
+                <button onclick="restartGame()" class="py-3 bg-yellow-600 hover:bg-yellow-500 font-gd rounded-xl text-xl shadow">
+                    RECOMMENCER
+                </button>
+                <button onclick="exitToMenu()" class="py-3 bg-red-600 hover:bg-red-500 font-gd rounded-xl text-xl shadow">
+                    QUITTER
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY MODAL (100% COMPLETE SCREEN) -->
+    <div id="win-modal" class="hidden absolute inset-0 z-50 bg-slate-950/90 backdrop-blur-md flex flex-col justify-center items-center p-4">
+        <!-- Fireworks particle canvas layer -->
+        <canvas id="fireworksCanvas" class="absolute inset-0 pointer-events-none z-0"></canvas>
+
+        <div class="relative z-10 bg-slate-900/90 border-4 border-yellow-400 p-8 rounded-3xl max-w-md w-full text-center shadow-2xl shadow-yellow-500/30 transform animate-bounce-short">
+            <div class="text-yellow-400 text-6xl mb-2 animate-pulse">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+            <h2 class="text-4xl md:text-5xl font-gd text-yellow-400 mb-1 tracking-wider">NIVEAU COMPLÉTÉ !</h2>
+            <div class="text-5xl font-gd text-cyan-400 my-3 neon-text">100%</div>
+
+            <!-- Stats Box -->
+            <div class="bg-slate-950/80 rounded-xl p-4 my-4 border border-slate-800 grid grid-cols-2 gap-3 text-left">
+                <div>
+                    <span class="text-xs text-slate-400 block font-bold">ESSAIS</span>
+                    <span id="win-stat-attempts" class="text-xl font-gd text-white">1</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-bold">ÉTOILES GAGNÉES</span>
+                    <span id="win-stat-stars" class="text-xl font-gd text-yellow-400"><i class="fa-solid fa-star"></i> +3</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-bold">TEMPS</span>
+                    <span id="win-stat-time" class="text-xl font-gd text-white">0:42</span>
+                </div>
+                <div>
+                    <span class="text-xs text-slate-400 block font-bold">MODE</span>
+                    <span id="win-stat-mode" class="text-xl font-gd text-green-400">NORMAL</span>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-3 mt-6">
+                <button id="btn-next-level" onclick="playNextLevel()" class="py-4 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 font-gd rounded-2xl text-2xl text-white shadow-lg border-2 border-green-300">
+                    NIVEAU SUIVANT <i class="fa-solid fa-forward ml-2"></i>
+                </button>
+                <div class="flex gap-3">
+                    <button onclick="restartGame()" class="flex-1 py-3 bg-yellow-600 hover:bg-yellow-500 font-gd rounded-xl text-lg shadow">
+                        <i class="fa-solid fa-rotate-right mr-1"></i> REJOUER
+                    </button>
+                    <button onclick="exitToMenu()" class="flex-1 py-3 bg-slate-800 hover:bg-slate-700 font-gd rounded-xl text-lg border border-slate-600">
+                        <i class="fa-solid fa-house mr-1"></i> MENU
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LEVEL EDITOR CONTAINER -->
+    <div id="editor-container" class="hidden absolute inset-0 z-30 bg-slate-950 flex flex-col">
+        <!-- Editor Top Toolbar -->
+        <div class="bg-slate-900 border-b border-slate-800 p-3 flex flex-wrap items-center justify-between gap-2 z-10">
+            <div class="flex items-center gap-2">
+                <button onclick="exitEditor()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold rounded-lg border border-slate-700 text-xs">
+                    <i class="fa-solid fa-arrow-left mr-1"></i> QUITTER
+                </button>
+                <input type="text" id="editor-level-name" value="Mon Niveau Wave" class="bg-slate-950 border border-slate-700 rounded px-3 py-1 text-sm font-bold text-yellow-400 w-40">
+            </div>
+
+            <!-- Tool selector palette -->
+            <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800 overflow-x-auto" id="editor-tools">
+                <!-- Palette buttons dynamically created -->
+            </div>
+
+            <!-- Length & Actions -->
+            <div class="flex items-center gap-2">
+                <div class="flex items-center bg-slate-950 px-2 py-1 rounded border border-slate-800 text-xs">
+                    <span class="text-slate-400 mr-2">Longueur:</span>
+                    <button onclick="changeEditorLength(-500)" class="px-2 py-0.5 bg-slate-800 rounded font-bold">-</button>
+                    <span id="editor-length-display" class="px-2 text-cyan-400 font-bold">4000</span>
+                    <button onclick="changeEditorLength(500)" class="px-2 py-0.5 bg-slate-800 rounded font-bold">+</button>
+                </div>
+                <button onclick="testEditorLevel()" class="px-4 py-2 bg-green-600 hover:bg-green-500 font-gd rounded-lg text-sm shadow">
+                    <i class="fa-solid fa-play mr-1"></i> TESTER
+                </button>
+                <button onclick="saveEditorLevel()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 font-gd rounded-lg text-sm shadow">
+                    <i class="fa-solid fa-floppy-disk mr-1"></i> SAUVER
+                </button>
+            </div>
+        </div>
+
+        <!-- Editor Canvas Workspace -->
+        <div class="flex-1 relative overflow-hidden bg-slate-950">
+            <canvas id="editorCanvas" class="w-full h-full cursor-crosshair"></canvas>
+            
+            <!-- Editor Scroll Controls / Minimap -->
+            <div class="absolute bottom-4 left-4 right-4 bg-slate-900/90 p-2 rounded-xl border border-slate-800 flex items-center gap-4">
+                <i class="fa-solid fa-magnifying-glass text-slate-500 text-xs"></i>
+                <input type="range" id="editor-scroll" min="0" max="3000" value="0" class="flex-1 h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                <button onclick="clearEditorGrid()" class="px-3 py-1 bg-red-900/50 hover:bg-red-800 border border-red-700 text-red-300 rounded text-xs font-bold">
+                    EFFACER TOUT
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // AUDIO SYNTHESIZER (No external audio files needed!)
+        class AudioEngine {
+            constructor() {
+                this.ctx = null;
+                this.enabled = true;
+                this.bgOsc = null;
+                this.beatInterval = null;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioContext = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioContext();
+                }
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+            }
+
+            playClick() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(600, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(200, this.ctx.currentTime + 0.05);
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.05);
+            }
+
+            playDeath() {
+                if (!this.enabled) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.3);
+            }
+
+            playWin() {
+                if (!this.enabled) return;
+                this.init();
+                const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+                notes.forEach((freq, index) => {
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(freq, this.ctx.currentTime + index * 0.12);
+                    gain.gain.setValueAtTime(0.25, this.ctx.currentTime + index * 0.12);
+                    gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + index * 0.12 + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start(this.ctx.currentTime + index * 0.12);
+                    osc.stop(this.ctx.currentTime + index * 0.12 + 0.3);
+                });
+            }
+
+            playWaveTone(holding) {
+                if (!this.enabled || !this.ctx) return;
+                // Optional subtle pitched hum
+            }
+        }
+
+        const audio = new AudioEngine();
+
+        function toggleAudio() {
+            audio.enabled = !audio.enabled;
+            const icon = document.getElementById('audio-icon');
+            const label = document.getElementById('audio-label');
+            if (audio.enabled) {
+                audio.init();
+                icon.className = 'fa-solid fa-volume-high text-3xl mb-1';
+                label.innerText = 'SON: ON';
+            } else {
+                icon.className = 'fa-solid fa-volume-xmark text-3xl mb-1';
+                label.innerText = 'SON: OFF';
+            }
+        }
+
+        // SKINS & GARAGE DATA
+        const SKINS = [
+            { id: 0, name: 'Standard Dart' },
+            { id: 1, name: 'Cyber Wing' },
+            { id: 2, name: 'Dragon Fang' },
+            { id: 3, name: 'Shuriken' },
+            { id: 4, name: 'Quantum Core' }
+        ];
+
+        const COLOR_PALETTE = [
+            '#06b6d4', '#3b82f6', '#8b5cf6', '#ec4899', 
+            '#ef4444', '#f97316', '#eab308', '#22c55e', '#ffffff'
+        ];
+
+        const TRAILS = [
+            { id: 'neon', name: 'Néon' },
+            { id: 'rainbow', name: 'Arc-en-ciel' },
+            { id: 'flame', name: 'Flamme' },
+            { id: 'dashed', name: 'Laser' }
+        ];
+
+        let playerCustom = {
+            skin: 0,
+            primaryColor: '#06b6d4',
+            secondaryColor: '#f97316',
+            trail: 'neon'
+        };
+
+        // Load saved customization
+        const savedCustom = localStorage.getItem('gd_wave_custom');
+        if (savedCustom) {
+            try { playerCustom = Object.assign(playerCustom, JSON.parse(savedCustom)); } catch(e){}
+        }
+
+        function saveCustomization() {
+            localStorage.setItem('gd_wave_custom', JSON.stringify(playerCustom));
+        }
+
+        // OFFICIAL LEVELS DEFINITION
+        const OFFICIAL_LEVELS = [
+            {
+                id: 'level_1',
+                name: 'Wave Madness',
+                stars: 3,
+                difficulty: 'Facile',
+                color: '#06b6d4',
+                length: 3600,
+                objects: generateLevel1Objects()
+            },
+            {
+                id: 'level_2',
+                name: 'Polargeist Wave',
+                stars: 6,
+                difficulty: 'Moyen',
+                color: '#3b82f6',
+                length: 5000,
+                objects: generateLevel2Objects()
+            },
+            {
+                id: 'level_3',
+                name: 'Deadlocked Wave',
+                stars: 10,
+                difficulty: 'Démon',
+                color: '#ef4444',
+                length: 6500,
+                objects: generateLevel3Objects()
+            }
+        ];
+
+        let customLevels = [];
+        const savedCustomLevels = localStorage.getItem('gd_wave_custom_levels');
+        if (savedCustomLevels) {
+            try { customLevels = JSON.parse(savedCustomLevels); } catch(e){}
+        }
+
+        let levelProgress = {};
+        const savedProgress = localStorage.getItem('gd_wave_progress');
+        if (savedProgress) {
+            try { levelProgress = JSON.parse(savedProgress); } catch(e){}
+        }
+
+        function saveProgress(levelId, percent, attempts) {
+            if (!levelProgress[levelId]) {
+                levelProgress[levelId] = { bestPercent: 0, attempts: 0, completed: false };
+            }
+            levelProgress[levelId].attempts += (attempts || 1);
+            if (percent > levelProgress[levelId].bestPercent) {
+                levelProgress[levelId].bestPercent = percent;
+            }
+            if (percent >= 100) {
+                levelProgress[levelId].completed = true;
+            }
+            localStorage.setItem('gd_wave_progress', JSON.stringify(levelProgress));
+        }
+
+        // LEVEL PROCEDURAL OBJECT BUILDERS
+        function generateLevel1Objects() {
+            const objs = [];
+            // Top and Bottom boundary hazards are auto-rendered, add slopes and saws
+            for (let x = 400; x < 3200; x += 300) {
+                if (x % 600 === 0) {
+                    // Block pillar
+                    objs.push({ type: 'block', x: x, y: 100, w: 60, h: 120 });
+                    objs.push({ type: 'block', x: x, y: 380, w: 60, h: 120 });
+                } else {
+                    // Slopes corridor
+                    objs.push({ type: 'slope_down', x: x, y: 80, size: 80 });
+                    objs.push({ type: 'slope_up', x: x + 100, y: 440, size: 80 });
+                    objs.push({ type: 'saw', x: x + 50, y: 260, r: 25 });
+                }
+            }
+            // Finish portal at level end
+            objs.push({ type: 'finish', x: 3500, y: 260 });
+            return objs;
+        }
+
+        function generateLevel2Objects() {
+            const objs = [];
+            for (let x = 400; x < 4600; x += 220) {
+                const alt = Math.sin(x / 200) * 80;
+                objs.push({ type: 'saw', x: x, y: 260 + alt, r: 28 });
+                if (x % 440 === 0) {
+                    objs.push({ type: 'slope_up', x: x, y: 100, size: 90 });
+                    objs.push({ type: 'slope_down', x: x, y: 420, size: 90 });
+                }
+            }
+            objs.push({ type: 'finish', x: 4900, y: 260 });
+            return objs;
+        }
+
+        function generateLevel3Objects() {
+            const objs = [];
+            for (let x = 400; x < 6100; x += 180) {
+                const topY = 120 + Math.cos(x / 150) * 50;
+                const botY = 400 + Math.sin(x / 150) * 50;
+                objs.push({ type: 'block', x: x, y: topY, w: 50, h: 80 });
+                objs.push({ type: 'block', x: x, y: botY, w: 50, h: 80 });
+                if (x % 360 === 0) {
+                    objs.push({ type: 'saw', x: x + 25, y: (topY + botY) / 2, r: 24 });
+                }
+            }
+            objs.push({ type: 'finish', x: 6400, y: 260 });
+            return objs;
+        }
+
+        // GAMEPLAY ENGINE VARIABLES
+        let canvas, ctx;
+        let menuCanvas, menuCtx;
+        let garageCanvas, garageCtx;
+        let fwCanvas, fwCtx;
+
+        let gameState = 'MENU'; // MENU, PLAYING, PAUSED, WIN, EDITOR
+        let currentLevel = null;
+        let isEndless = false;
+        let isPractice = false;
+        let attemptsCount = 1;
+        let startTime = 0;
+        let gameTime = 0;
+
+        // Player physics
+        let player = {
+            x: 100,
+            y: 260,
+            vx: 6.5,
+            vy: 0,
+            size: 16,
+            holding: false,
+            trailHistory: [],
+            checkpoints: []
+        };
+
+        let cameraX = 0;
+        let particles = [];
+        let fireworks = [];
+        let animationFrameId = null;
+
+        window.onload = function() {
+            canvas = document.getElementById('gameCanvas');
+            ctx = canvas.getContext('2d');
+
+            menuCanvas = document.getElementById('menuPreviewCanvas');
+            menuCtx = menuCanvas.getContext('2d');
+
+            garageCanvas = document.getElementById('garageCanvas');
+            garageCtx = garageCanvas.getContext('2d');
+
+            fwCanvas = document.getElementById('fireworksCanvas');
+            fwCtx = fwCanvas.getContext('2d');
+
+            resizeCanvases();
+            window.addEventListener('resize', resizeCanvases);
+
+            // Controls listeners
+            window.addEventListener('keydown', handleKeyDown);
+            window.addEventListener('keyup', handleKeyUp);
+
+            // Touch / Mouse controls for gameplay
+            const handleTouchStart = (e) => {
+                if (gameState === 'PLAYING') {
+                    player.holding = true;
+                    audio.init();
+                }
+            };
+            const handleTouchEnd = (e) => {
+                if (gameState === 'PLAYING') {
+                    player.holding = false;
+                }
+            };
+
+            canvas.addEventListener('mousedown', handleTouchStart);
+            canvas.addEventListener('mouseup', handleTouchEnd);
+            canvas.addEventListener('touchstart', (e) => { e.preventDefault(); handleTouchStart(e); }, { passive: false });
+            canvas.addEventListener('touchend', (e) => { e.preventDefault(); handleTouchEnd(e); }, { passive: false });
+
+            // Initialize Garage UI & Editor tools
+            initGarageUI();
+            initEditorTools();
+            renderMenuPreview();
+
+            // Main Animation Loop
+            requestAnimationFrame(gameLoop);
+        };
+
+        function resizeCanvases() {
+            if (canvas) {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+            if (fwCanvas) {
+                fwCanvas.width = window.innerWidth;
+                fwCanvas.height = window.innerHeight;
+            }
+            if (document.getElementById('editorCanvas')) {
+                const edCanvas = document.getElementById('editorCanvas');
+                edCanvas.width = edCanvas.parentElement.clientWidth;
+                edCanvas.height = edCanvas.parentElement.clientHeight;
+            }
+        }
+
+        function handleKeyDown(e) {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (gameState === 'PLAYING') {
+                    player.holding = true;
+                    e.preventDefault();
+                }
+            }
+            if (e.code === 'KeyZ' && gameState === 'PLAYING' && isPractice) {
+                addPracticeCheckpoint();
+            }
+            if (e.code === 'KeyX' && gameState === 'PLAYING' && isPractice) {
+                removePracticeCheckpoint();
+            }
+            if (e.code === 'KeyP' || e.code === 'Escape') {
+                if (gameState === 'PLAYING') pauseGame();
+                else if (gameState === 'PAUSED') resumeGame();
+            }
+        }
+
+        function handleKeyUp(e) {
+            if (e.code === 'Space' || e.code === 'ArrowUp') {
+                if (gameState === 'PLAYING') {
+                    player.holding = false;
+                }
+            }
+        }
+
+        function closeModals() {
+            document.getElementById('level-select-modal').classList.add('hidden');
+            document.getElementById('custom-levels-modal').classList.add('hidden');
+            document.getElementById('garage-modal').classList.add('hidden');
+            audio.playClick();
+        }
+
+        function openLevelSelect() {
+            closeModals();
+            renderLevelCards();
+            document.getElementById('level-select-modal').classList.remove('hidden');
+        }
+
+        function openCustomLevelsModal() {
+            closeModals();
+            renderCustomLevelsList();
+            document.getElementById('custom-levels-modal').classList.remove('hidden');
+        }
+
+        function openGarage() {
+            closeModals();
+            document.getElementById('garage-modal').classList.remove('hidden');
+            renderGaragePreview();
+        }
+
+        function exitToMenu() {
+            gameState = 'MENU';
+            document.getElementById('game-container').classList.add('hidden');
+            document.getElementById('pause-modal').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+            document.getElementById('editor-container').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+            renderMenuPreview();
+            audio.playClick();
+        }
+
+        function renderLevelCards() {
+            const container = document.getElementById('level-cards-container');
+            container.innerHTML = '';
+
+            OFFICIAL_LEVELS.forEach((lvl, idx) => {
+                const prog = levelProgress[lvl.id] || { bestPercent: 0, completed: false };
+                const card = document.createElement('div');
+                card.className = 'min-w-[280px] bg-slate-900 border-2 rounded-2xl p-5 flex flex-col justify-between items-center shadow-xl transition transform hover:scale-105';
+                card.style.borderColor = lvl.color;
+
+                card.innerHTML = `
+                    <div class="text-center">
+                        <div class="text-xs font-bold text-slate-400 mb-1">NIVEAU ${idx + 1}</div>
+                        <h3 class="text-2xl font-gd" style="color: ${lvl.color}">${lvl.name}</h3>
+                        <div class="flex justify-center gap-1 my-2 text-yellow-400">
+                            ${'<i class="fa-solid fa-star"></i>'.repeat(Math.min(5, lvl.stars))}
+                        </div>
+                        <span class="text-xs px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-bold border border-slate-700">${lvl.difficulty}</span>
+                    </div>
+
+                    <div class="w-full my-4">
+                        <div class="flex justify-between text-xs font-bold mb-1">
+                            <span>Progression</span>
+                            <span class="${prog.completed ? 'text-green-400' : 'text-cyan-400'}">${prog.bestPercent}%</span>
+                        </div>
+                        <div class="w-full bg-slate-950 h-3 rounded-full border border-slate-800 overflow-hidden">
+                            <div class="bg-gradient-to-r from-cyan-500 to-green-400 h-full" style="width: ${prog.bestPercent}%"></div>
+                        </div>
+                    </div>
+
+                    <button onclick="startLevel('${lvl.id}')" class="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 font-gd rounded-xl text-lg border border-cyan-300 shadow">
+                        <i class="fa-solid fa-play mr-2"></i> JOUER
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function renderCustomLevelsList() {
+            const container = document.getElementById('custom-levels-list');
+            container.innerHTML = '';
+
+            if (customLevels.length === 0) {
+                container.innerHTML = `<div class="text-center text-slate-500 py-8 font-bold">Aucun niveau personnalisé créé pour l'instant.</div>`;
+                return;
+            }
+
+            customLevels.forEach((lvl, idx) => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-900 border border-slate-800 rounded-xl p-4 flex justify-between items-center';
+                item.innerHTML = `
+                    <div>
+                        <h4 class="font-gd text-xl text-yellow-400">${lvl.name}</h4>
+                        <div class="text-xs text-slate-400">Longueur: ${lvl.length}px | Objets: ${lvl.objects.length}</div>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="startCustomLevel(${idx})" class="px-4 py-2 bg-green-600 hover:bg-green-500 font-gd rounded-lg text-sm">
+                            <i class="fa-solid fa-play mr-1"></i> JOUER
+                        </button>
+                        <button onclick="editCustomLevel(${idx})" class="px-3 py-2 bg-yellow-600 hover:bg-yellow-500 rounded-lg text-xs font-bold">
+                            <i class="fa-solid fa-pen"></i>
+                        </button>
+                        <button onclick="deleteCustomLevel(${idx})" class="px-3 py-2 bg-red-600 hover:bg-red-500 rounded-lg text-xs font-bold">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function startLevel(levelId) {
+            closeModals();
+            currentLevel = OFFICIAL_LEVELS.find(l => l.id === levelId);
+            isEndless = false;
+            initGame();
+        }
+
+        function startCustomLevel(idx) {
+            closeModals();
+            currentLevel = customLevels[idx];
+            isEndless = false;
+            initGame();
+        }
+
+        function startEndlessMode() {
+            closeModals();
+            isEndless = true;
+            currentLevel = {
+                id: 'endless',
+                name: 'Endless Wave',
+                stars: 0,
+                length: 999999,
+                objects: []
+            };
+            initGame();
+        }
+
+        function initGame() {
+            gameState = 'PLAYING';
+            attemptsCount = (levelProgress[currentLevel.id]?.attempts || 0) + 1;
+            saveProgress(currentLevel.id, levelProgress[currentLevel.id]?.bestPercent || 0, 1);
+
+            document.getElementById('main-menu').classList.add('hidden');
+            document.getElementById('game-container').classList.remove('hidden');
+            document.getElementById('hud-level-title').innerText = currentLevel.name;
+            document.getElementById('hud-attempt').innerText = `Essai ${attemptsCount}`;
+
+            resetPlayer();
+            startTime = Date.now();
+            particles = [];
+            isPractice = false;
+            updatePracticeHUD();
+            audio.playClick();
+        }
+
+        function resetPlayer() {
+            player.x = 100;
+            player.y = canvas.height / 2;
+            player.vy = 0;
+            player.holding = false;
+            player.trailHistory = [];
+            cameraX = 0;
+
+            // If practice mode and checkpoint exists, restore
+            if (isPractice && player.checkpoints.length > 0) {
+                const cp = player.checkpoints[player.checkpoints.length - 1];
+                player.x = cp.x;
+                player.y = cp.y;
+            }
+        }
+
+        function togglePracticeMode() {
+            isPractice = !isPractice;
+            if (!isPractice) player.checkpoints = [];
+            updatePracticeHUD();
+            audio.playClick();
+        }
+
+        function updatePracticeHUD() {
+            const pHud = document.getElementById('practice-hud');
+            const btn = document.getElementById('btn-practice-toggle');
+            if (isPractice) {
+                pHud.classList.remove('hidden');
+                btn.className = 'p-2 bg-green-600 rounded-lg border border-green-300 text-xs font-bold text-white';
+            } else {
+                pHud.classList.add('hidden');
+                btn.className = 'p-2 bg-slate-800/80 hover:bg-slate-700 rounded-lg border border-slate-600 text-xs font-bold text-slate-300';
+            }
+        }
+
+        function addPracticeCheckpoint() {
+            if (!isPractice) return;
+            player.checkpoints.push({ x: player.x, y: player.y });
+            createCheckpointSparkles(player.x, player.y);
+            audio.playClick();
+        }
+
+        function removePracticeCheckpoint() {
+            if (!isPractice || player.checkpoints.length === 0) return;
+            player.checkpoints.pop();
+            audio.playClick();
+        }
+
+        function updatePhysics() {
+            if (gameState !== 'PLAYING') return;
+
+            // GD Wave Math: 45 degree angle movement
+            const waveSpeed = player.vx;
+            player.vy = player.holding ? -waveSpeed : waveSpeed;
+
+            player.x += waveSpeed;
+            player.y += player.vy;
+
+            // Record trail line
+            player.trailHistory.push({ x: player.x, y: player.y });
+            if (player.trailHistory.length > 40) player.trailHistory.shift();
+
+            // Camera tracking
+            cameraX = player.x - 200;
+
+            // Floor & Roof Bounds Collision (Margin 50px top and bottom)
+            const topBound = 50;
+            const bottomBound = canvas.height - 50;
+
+            if (player.y - player.size < topBound || player.y + player.size > bottomBound) {
+                handleDeath();
+                return;
+            }
+
+            // Procedural generator for endless mode
+            if (isEndless) {
+                generateEndlessChunk(player.x + canvas.width);
+            }
+
+            // Object Collisions
+            const objs = currentLevel.objects || [];
+            for (let i = 0; i < objs.length; i++) {
+                const obj = objs[i];
+
+                // Skip objects far out of viewport
+                if (obj.x < player.x - 200 || obj.x > player.x + 300) continue;
+
+                if (obj.type === 'finish') {
+                    // 100% Win Condition Check!
+                    if (player.x >= obj.x) {
+                        triggerVictory();
+                        return;
+                    }
+                } else if (checkCollision(player, obj)) {
+                    handleDeath();
+                    return;
+                }
+            }
+
+            // Check length win condition if finish portal crossed
+            if (!isEndless && player.x >= currentLevel.length) {
+                triggerVictory();
+                return;
+            }
+
+            // HUD Progress Update
+            const progress = isEndless ? 0 : Math.min(100, Math.floor((player.x / currentLevel.length) * 100));
+            document.getElementById('hud-progress-fill').style.width = `${progress}%`;
+            document.getElementById('hud-progress-text').innerText = isEndless ? `${Math.floor(player.x)}m` : `${progress}%`;
+
+            // Spawn movement particles
+            if (Math.random() < 0.6) {
+                particles.push({
+                    x: player.x,
+                    y: player.y,
+                    vx: (Math.random() - 0.5) * 2,
+                    vy: (Math.random() - 0.5) * 2,
+                    size: Math.random() * 4 + 2,
+                    color: playerCustom.primaryColor,
+                    life: 1.0
+                });
+            }
+        }
+
+        function checkCollision(p, obj) {
+            // Player point / bounding box
+            const px = p.x;
+            const py = p.y;
+            const pr = p.size;
+
+            if (obj.type === 'block') {
+                return (px + pr > obj.x && px - pr < obj.x + obj.w &&
+                        py + pr > obj.y && py - pr < obj.y + obj.h);
+            } else if (obj.type === 'saw') {
+                const dx = px - obj.x;
+                const dy = py - obj.y;
+                return (dx * dx + dy * dy) < Math.pow(pr + obj.r, 2);
+            } else if (obj.type === 'slope_up') {
+                // Slope triangle (bottom-left to top-right)
+                if (px > obj.x && px < obj.x + obj.size) {
+                    const slopeY = obj.y + obj.size - (px - obj.x);
+                    if (py + pr > slopeY && py - pr < obj.y + obj.size) return true;
+                }
+            } else if (obj.type === 'slope_down') {
+                // Slope triangle (top-left to bottom-right)
+                if (px > obj.x && px < obj.x + obj.size) {
+                    const slopeY = obj.y + (px - obj.x);
+                    if (py - pr < slopeY && py + pr > obj.y) return true;
+                }
+            }
+            return false;
+        }
+
+        function generateEndlessChunk(targetX) {
+            if (!currentLevel.lastGeneratedX) currentLevel.lastGeneratedX = 500;
+            while (currentLevel.lastGeneratedX < targetX) {
+                const x = currentLevel.lastGeneratedX + 200;
+                const rand = Math.random();
+                if (rand < 0.4) {
+                    currentLevel.objects.push({ type: 'saw', x: x, y: 150 + Math.random() * (canvas.height - 300), r: 26 });
+                } else if (rand < 0.7) {
+                    currentLevel.objects.push({ type: 'block', x: x, y: 100, w: 60, h: 100 });
+                    currentLevel.objects.push({ type: 'block', x: x, y: canvas.height - 200, w: 60, h: 100 });
+                } else {
+                    currentLevel.objects.push({ type: 'slope_down', x: x, y: 60, size: 90 });
+                    currentLevel.objects.push({ type: 'slope_up', x: x, y: canvas.height - 150, size: 90 });
+                }
+                currentLevel.lastGeneratedX = x;
+            }
+        }
+
+        function handleDeath() {
+            audio.playDeath();
+            createDeathExplosion(player.x, player.y);
+
+            if (isPractice && player.checkpoints.length > 0) {
+                resetPlayer();
+            } else {
+                attemptsCount++;
+                document.getElementById('hud-attempt').innerText = `Essai ${attemptsCount}`;
+                saveProgress(currentLevel.id, Math.floor((player.x / currentLevel.length) * 100), 1);
+                resetPlayer();
+            }
+        }
+
+        function triggerVictory() {
+            gameState = 'WIN';
+            audio.playWin();
+            gameTime = Math.floor((Date.now() - startTime) / 1000);
+
+            // Save progress 100%
+            saveProgress(currentLevel.id, 100, 0);
+
+            // Populate win screen
+            document.getElementById('win-stat-attempts').innerText = attemptsCount;
+            document.getElementById('win-stat-stars').innerHTML = `<i class="fa-solid fa-star"></i> +${currentLevel.stars || 0}`;
+            document.getElementById('win-stat-time').innerText = `${Math.floor(gameTime / 60)}:${(gameTime % 60).toString().padStart(2, '0')}`;
+            document.getElementById('win-stat-mode').innerText = isPractice ? 'ENTRAÎNEMENT' : 'NORMAL';
+
+            // Check next level availability
+            const currIdx = OFFICIAL_LEVELS.findIndex(l => l.id === currentLevel.id);
+            const nextBtn = document.getElementById('btn-next-level');
+            if (currIdx !== -1 && currIdx < OFFICIAL_LEVELS.length - 1) {
+                nextBtn.classList.remove('hidden');
+            } else {
+                nextBtn.classList.add('hidden');
+            }
+
+            document.getElementById('win-modal').classList.remove('hidden');
+            spawnVictoryFireworks();
+        }
+
+        function playNextLevel() {
+            document.getElementById('win-modal').classList.add('hidden');
+            const currIdx = OFFICIAL_LEVELS.findIndex(l => l.id === currentLevel.id);
+            if (currIdx !== -1 && currIdx < OFFICIAL_LEVELS.length - 1) {
+                startLevel(OFFICIAL_LEVELS[currIdx + 1].id);
+            }
+        }
+
+        function pauseGame() {
+            if (gameState === 'PLAYING') {
+                gameState = 'PAUSED';
+                document.getElementById('pause-modal').classList.remove('hidden');
+            }
+        }
+
+        function resumeGame() {
+            if (gameState === 'PAUSED') {
+                gameState = 'PLAYING';
+                document.getElementById('pause-modal').classList.add('hidden');
+            }
+        }
+
+        function restartGame() {
+            document.getElementById('pause-modal').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+            initGame();
+        }
+
+        function renderGame() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Background Grid Effect
+            ctx.strokeStyle = 'rgba(30, 41, 59, 0.5)';
+            ctx.lineWidth = 1;
+            const gridSize = 60;
+            const offsetX = cameraX % gridSize;
+
+            for (let x = -offsetX; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+
+            // Top and Bottom Neon Hazards
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, canvas.width, 50);
+            ctx.fillRect(0, canvas.height - 50, canvas.width, 50);
+
+            ctx.strokeStyle = '#06b6d4';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(0, 50);
+            ctx.lineTo(canvas.width, 50);
+            ctx.moveTo(0, canvas.height - 50);
+            ctx.lineTo(canvas.width, canvas.height - 50);
+            ctx.stroke();
+
+            // Render Level Objects
+            ctx.save();
+            ctx.translate(-cameraX, 0);
+
+            const objs = currentLevel.objects || [];
+            objs.forEach(obj => {
+                if (obj.x < cameraX - 100 || obj.x > cameraX + canvas.width + 100) return;
+
+                if (obj.type === 'block') {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                    ctx.strokeRect(obj.x, obj.y, obj.w, obj.h);
+                } else if (obj.type === 'saw') {
+                    ctx.save();
+                    ctx.translate(obj.x, obj.y);
+                    ctx.rotate(Date.now() / 200);
+                    ctx.strokeStyle = '#ef4444';
+                    ctx.lineWidth = 3;
+                    ctx.fillStyle = '#7f1d1d';
+                    ctx.beginPath();
+                    ctx.arc(0, 0, obj.r, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.stroke();
+
+                    // Saw Teeth
+                    for (let a = 0; a < Math.PI * 2; a += Math.PI / 4) {
+                        ctx.beginPath();
+                        ctx.moveTo(Math.cos(a) * obj.r, Math.sin(a) * obj.r);
+                        ctx.lineTo(Math.cos(a) * (obj.r + 8), Math.sin(a) * (obj.r + 8));
+                        ctx.stroke();
+                    }
+                    ctx.restore();
+                } else if (obj.type === 'slope_up') {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x, obj.y + obj.size);
+                    ctx.lineTo(obj.x + obj.size, obj.y);
+                    ctx.lineTo(obj.x + obj.size, obj.y + obj.size);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (obj.type === 'slope_down') {
+                    ctx.fillStyle = '#1e293b';
+                    ctx.strokeStyle = '#38bdf8';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x, obj.y);
+                    ctx.lineTo(obj.x + obj.size, obj.y + obj.size);
+                    ctx.lineTo(obj.x, obj.y + obj.size);
+                    ctx.closePath();
+                    ctx.fill();
+                    ctx.stroke();
+                } else if (obj.type === 'finish') {
+                    // FINISH PORTAL / LINE (100%)
+                    ctx.strokeStyle = '#facc15';
+                    ctx.lineWidth = 4;
+                    ctx.shadowColor = '#eab308';
+                    ctx.shadowBlur = 15;
+                    ctx.beginPath();
+                    ctx.moveTo(obj.x, 50);
+                    ctx.lineTo(obj.x, canvas.height - 50);
+                    ctx.stroke();
+                    ctx.shadowBlur = 0;
+
+                    // Neon Portal Ring
+                    ctx.fillStyle = '#facc15';
+                    ctx.font = '20px Rajdhani';
+                    ctx.fillText('FINISH 100%', obj.x - 45, 40);
+                }
+            });
+
+            // Draw Checkpoints
+            if (isPractice) {
+                player.checkpoints.forEach((cp, idx) => {
+                    ctx.fillStyle = '#22c55e';
+                    ctx.beginPath();
+                    ctx.arc(cp.x, cp.y, 8, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+            }
+
+            // Draw Wave Trail
+            if (player.trailHistory.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(player.trailHistory[0].x, player.trailHistory[0].y);
+                for (let i = 1; i < player.trailHistory.length; i++) {
+                    ctx.lineTo(player.trailHistory[i].x, player.trailHistory[i].y);
+                }
+                ctx.strokeStyle = playerCustom.primaryColor;
+                ctx.lineWidth = 6;
+                ctx.shadowColor = playerCustom.primaryColor;
+                ctx.shadowBlur = 10;
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+            }
+
+            // Draw Wave Player Arrow
+            drawWaveArrow(ctx, player.x, player.y, player.holding ? -0.78 : 0.78, playerCustom);
+
+            // Draw Particles
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.life -= 0.02;
+                if (p.life <= 0) {
+                    particles.splice(idx, 1);
+                    return;
+                }
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.life;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+                ctx.globalAlpha = 1.0;
+            });
+
+            ctx.restore();
+        }
+
+        function drawWaveArrow(targetCtx, x, y, angle, custom) {
+            targetCtx.save();
+            targetCtx.translate(x, y);
+            targetCtx.rotate(angle);
+
+            const skin = custom.skin;
+            targetCtx.fillStyle = custom.primaryColor;
+            targetCtx.strokeStyle = custom.secondaryColor;
+            targetCtx.lineWidth = 2;
+
+            targetCtx.beginPath();
+            if (skin === 0) {
+                // Standard GD Arrow Triangle
+                targetCtx.moveTo(16, 0);
+                targetCtx.lineTo(-12, -12);
+                targetCtx.lineTo(-6, 0);
+                targetCtx.lineTo(-12, 12);
+            } else if (skin === 1) {
+                // Cyber Wing
+                targetCtx.moveTo(18, 0);
+                targetCtx.lineTo(-10, -14);
+                targetCtx.lineTo(-2, -4);
+                targetCtx.lineTo(-2, 4);
+                targetCtx.lineTo(-10, 14);
+            } else if (skin === 2) {
+                // Dragon Fang
+                targetCtx.moveTo(20, 0);
+                targetCtx.lineTo(-8, -10);
+                targetCtx.lineTo(-14, -14);
+                targetCtx.lineTo(-4, 0);
+                targetCtx.lineTo(-14, 14);
+                targetCtx.lineTo(-8, 10);
+            } else {
+                // Core Shuriken
+                targetCtx.moveTo(16, 0);
+                targetCtx.lineTo(0, -12);
+                targetCtx.lineTo(-16, 0);
+                targetCtx.lineTo(0, 12);
+            }
+            targetCtx.closePath();
+            targetCtx.fill();
+            targetCtx.stroke();
+
+            // Inner Accent Core
+            targetCtx.fillStyle = custom.secondaryColor;
+            targetCtx.beginPath();
+            targetCtx.arc(-2, 0, 3, 0, Math.PI * 2);
+            targetCtx.fill();
+
+            targetCtx.restore();
+        }
+
+        function gameLoop() {
+            if (gameState === 'PLAYING') {
+                updatePhysics();
+                renderGame();
+            } else if (gameState === 'WIN') {
+                renderGame();
+                updateFireworks();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        function spawnVictoryFireworks() {
+            fireworks = [];
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => {
+                    createFirework(Math.random() * fwCanvas.width, Math.random() * (fwCanvas.height * 0.6));
+                }, i * 300);
+            }
+        }
+
+        function createFirework(x, y) {
+            const colors = ['#facc15', '#22c55e', '#06b6d4', '#ec4899', '#a855f7'];
+            const color = colors[Math.floor(Math.random() * colors.length)];
+            for (let i = 0; i < 40; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 6 + 2;
+                fireworks.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    color: color,
+                    life: 1.0
+                });
+            }
+        }
+
+        function updateFireworks() {
+            fwCtx.clearRect(0, 0, fwCanvas.width, fwCanvas.height);
+            fireworks.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.1; // gravity
+                p.life -= 0.015;
+                if (p.life <= 0) {
+                    fireworks.splice(idx, 1);
+                    return;
+                }
+                fwCtx.fillStyle = p.color;
+                fwCtx.globalAlpha = p.life;
+                fwCtx.beginPath();
+                fwCtx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+                fwCtx.fill();
+                fwCtx.globalAlpha = 1.0;
+            });
+        }
+
+        function createDeathExplosion(x, y) {
+            for (let i = 0; i < 25; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.5) * 10,
+                    size: Math.random() * 6 + 3,
+                    color: '#ef4444',
+                    life: 1.0
+                });
+            }
+        }
+
+        function createCheckpointSparkles(x, y) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({
+                    x: x,
+                    y: y,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: (Math.random() - 0.5) * 6,
+                    size: Math.random() * 5 + 2,
+                    color: '#22c55e',
+                    life: 1.0
+                });
+            }
+        }
+
+        function initGarageUI() {
+            // Render Skin Buttons
+            const skinsGrid = document.getElementById('skins-selector');
+            skinsGrid.innerHTML = '';
+            SKINS.forEach(s => {
+                const btn = document.createElement('button');
+                btn.className = `p-2 rounded-lg border-2 ${playerCustom.skin === s.id ? 'border-cyan-400 bg-slate-800' : 'border-slate-800 bg-slate-950'}`;
+                btn.onclick = () => {
+                    playerCustom.skin = s.id;
+                    document.getElementById('garage-skin-name').innerText = s.name;
+                    initGarageUI();
+                    renderGaragePreview();
+                    saveCustomization();
+                };
+                btn.innerText = `Skin ${s.id + 1}`;
+                skinsGrid.appendChild(btn);
+            });
+
+            // Primary Colors Palette
+            const pColors = document.getElementById('primary-colors');
+            pColors.innerHTML = '';
+            COLOR_PALETTE.forEach(c => {
+                const dot = document.createElement('button');
+                dot.className = `w-7 h-7 rounded-full border-2 ${playerCustom.primaryColor === c ? 'scale-110 border-white' : 'border-transparent'}`;
+                dot.style.backgroundColor = c;
+                dot.onclick = () => {
+                    playerCustom.primaryColor = c;
+                    initGarageUI();
+                    renderGaragePreview();
+                    saveCustomization();
+                };
+                pColors.appendChild(dot);
+            });
+
+            // Secondary Colors Palette
+            const sColors = document.getElementById('secondary-colors');
+            sColors.innerHTML = '';
+            COLOR_PALETTE.forEach(c => {
+                const dot = document.createElement('button');
+                dot.className = `w-7 h-7 rounded-full border-2 ${playerCustom.secondaryColor === c ? 'scale-110 border-white' : 'border-transparent'}`;
+                dot.style.backgroundColor = c;
+                dot.onclick = () => {
+                    playerCustom.secondaryColor = c;
+                    initGarageUI();
+                    renderGaragePreview();
+                    saveCustomization();
+                };
+                sColors.appendChild(dot);
+            });
+
+            // Trail Selector
+            const tSel = document.getElementById('trail-selector');
+            tSel.innerHTML = '';
+            TRAILS.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = `py-1 px-2 rounded text-xs font-bold border ${playerCustom.trail === t.id ? 'bg-cyan-600 border-cyan-300 text-white' : 'bg-slate-950 border-slate-800 text-slate-400'}`;
+                btn.innerText = t.name;
+                btn.onclick = () => {
+                    playerCustom.trail = t.id;
+                    initGarageUI();
+                    renderGaragePreview();
+                    saveCustomization();
+                };
+                tSel.appendChild(btn);
+            });
+        }
+
+        function renderGaragePreview() {
+            if (!garageCtx) return;
+            garageCtx.clearRect(0, 0, garageCanvas.width, garageCanvas.height);
+
+            // Draw Background Grid
+            garageCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+            for (let i = 0; i < garageCanvas.width; i += 20) {
+                garageCtx.beginPath();
+                garageCtx.moveTo(i, 0);
+                garageCtx.lineTo(i, garageCanvas.height);
+                garageCtx.stroke();
+            }
+
+            // Trail preview
+            garageCtx.strokeStyle = playerCustom.primaryColor;
+            garageCtx.lineWidth = 5;
+            garageCtx.beginPath();
+            garageCtx.moveTo(40, 140);
+            garageCtx.lineTo(100, 80);
+            garageCtx.lineTo(140, 120);
+            garageCtx.stroke();
+
+            // Arrow
+            drawWaveArrow(garageCtx, 140, 120, 0.78, playerCustom);
+        }
+
+        function renderMenuPreview() {
+            if (!menuCtx) return;
+            menuCtx.clearRect(0, 0, menuCanvas.width, menuCanvas.height);
+            drawWaveArrow(menuCtx, 80, 60, 0, playerCustom);
+        }
+
+        // LEVEL EDITOR STATE
+        let editorData = {
+            name: 'Mon Niveau Wave',
+            length: 4000,
+            objects: []
+        };
+        let selectedTool = 'block';
+        let editorScrollX = 0;
+
+        const EDITOR_TOOLS = [
+            { id: 'block', name: 'Bloc', icon: 'fa-cube' },
+            { id: 'slope_up', name: 'Pente ▲', icon: 'fa-play -rotate-90' },
+            { id: 'slope_down', name: 'Pente ▼', icon: 'fa-play rotate-90' },
+            { id: 'saw', name: 'Scie', icon: 'fa-compact-disc' },
+            { id: 'finish', name: 'Fin 100%', icon: 'fa-flag-checkered' },
+            { id: 'eraser', name: 'Gomme', icon: 'fa-eraser' }
+        ];
+
+        function initEditorTools() {
+            const container = document.getElementById('editor-tools');
+            container.innerHTML = '';
+            EDITOR_TOOLS.forEach(t => {
+                const btn = document.createElement('button');
+                btn.className = `px-3 py-2 rounded-lg font-bold text-xs flex items-center gap-1 ${selectedTool === t.id ? 'bg-cyan-600 text-white' : 'bg-slate-900 text-slate-400 hover:text-white'}`;
+                btn.innerHTML = `<i class="fa-solid ${t.icon}"></i> ${t.name}`;
+                btn.onclick = () => {
+                    selectedTool = t.id;
+                    initEditorTools();
+                };
+                container.appendChild(btn);
+            });
+
+            const scrollInput = document.getElementById('editor-scroll');
+            scrollInput.oninput = (e) => {
+                editorScrollX = parseInt(e.target.value);
+                renderEditor();
+            };
+
+            const edCanvas = document.getElementById('editorCanvas');
+            edCanvas.onclick = handleEditorClick;
+        }
+
+        function openEditor() {
+            closeModals();
+            document.getElementById('editor-container').classList.remove('hidden');
+            resizeCanvases();
+            renderEditor();
+        }
+
+        function exitEditor() {
+            document.getElementById('editor-container').classList.add('hidden');
+            document.getElementById('main-menu').classList.remove('hidden');
+        }
+
+        function handleEditorClick(e) {
+            const rect = e.target.getBoundingClientRect();
+            const clickX = e.clientX - rect.left + editorScrollX;
+            const clickY = e.clientY - rect.top;
+
+            // Snap to 40px grid
+            const gridX = Math.floor(clickX / 40) * 40;
+            const gridY = Math.floor(clickY / 40) * 40;
+
+            if (selectedTool === 'eraser') {
+                editorData.objects = editorData.objects.filter(o => 
+                    !(clickX >= o.x && clickX <= o.x + (o.w || 40) &&
+                      clickY >= o.y && clickY <= o.y + (o.h || 40))
+                );
+            } else if (selectedTool === 'finish') {
+                // Remove existing finish line and place new
+                editorData.objects = editorData.objects.filter(o => o.type !== 'finish');
+                editorData.objects.push({ type: 'finish', x: gridX, y: 260 });
+            } else if (selectedTool === 'saw') {
+                editorData.objects.push({ type: 'saw', x: gridX + 20, y: gridY + 20, r: 24 });
+            } else if (selectedTool === 'block') {
+                editorData.objects.push({ type: 'block', x: gridX, y: gridY, w: 40, h: 40 });
+            } else {
+                editorData.objects.push({ type: selectedTool, x: gridX, y: gridY, size: 40 });
+            }
+
+            renderEditor();
+        }
+
+        function renderEditor() {
+            const edCanvas = document.getElementById('editorCanvas');
+            const edCtx = edCanvas.getContext('2d');
+            edCtx.clearRect(0, 0, edCanvas.width, edCanvas.height);
+
+            edCtx.save();
+            edCtx.translate(-editorScrollX, 0);
+
+            // Draw Editor Grid
+            edCtx.strokeStyle = '#1e293b';
+            edCtx.lineWidth = 1;
+            for (let x = 0; x < editorData.length; x += 40) {
+                edCtx.beginPath();
+                edCtx.moveTo(x, 0);
+                edCtx.lineTo(x, edCanvas.height);
+                edCtx.stroke();
+            }
+
+            // Draw Objects
+            editorData.objects.forEach(obj => {
+                if (obj.type === 'block') {
+                    edCtx.fillStyle = '#334155';
+                    edCtx.strokeStyle = '#38bdf8';
+                    edCtx.fillRect(obj.x, obj.y, obj.w, obj.h);
+                    edCtx.strokeRect(obj.x, obj.y, obj.w, obj.h);
+                } else if (obj.type === 'saw') {
+                    edCtx.strokeStyle = '#ef4444';
+                    edCtx.beginPath();
+                    edCtx.arc(obj.x, obj.y, obj.r, 0, Math.PI * 2);
+                    edCtx.stroke();
+                } else if (obj.type === 'finish') {
+                    edCtx.strokeStyle = '#facc15';
+                    edCtx.lineWidth = 3;
+                    edCtx.beginPath();
+                    edCtx.moveTo(obj.x, 0);
+                    edCtx.lineTo(obj.x, edCanvas.height);
+                    edCtx.stroke();
+                    edCtx.fillStyle = '#facc15';
+                    edCtx.fillText('FIN 100%', obj.x - 20, 30);
+                }
+            });
+
+            edCtx.restore();
+        }
+
+        function changeEditorLength(delta) {
+            editorData.length = Math.max(1000, editorData.length + delta);
+            document.getElementById('editor-length-display').innerText = editorData.length;
+            document.getElementById('editor-scroll').max = editorData.length - 800;
+            renderEditor();
+        }
+
+        function clearEditorGrid() {
+            editorData.objects = [];
+            renderEditor();
+        }
+
+        function saveEditorLevel() {
+            editorData.name = document.getElementById('editor-level-name').value || 'Niveau Sans Nom';
+            customLevels.push(JSON.parse(JSON.stringify(editorData)));
+            localStorage.setItem('gd_wave_custom_levels', JSON.stringify(customLevels));
+            audio.playClick();
+            exitEditor();
+            openCustomLevelsModal();
+        }
+
+        function testEditorLevel() {
+            currentLevel = {
+                id: 'custom_test',
+                name: document.getElementById('editor-level-name').value,
+                stars: 5,
+                length: editorData.length,
+                objects: editorData.objects
+            };
+            document.getElementById('editor-container').classList.add('hidden');
+            initGame();
+        }
+
+        function deleteCustomLevel(idx) {
+            customLevels.splice(idx, 1);
+            localStorage.setItem('gd_wave_custom_levels', JSON.stringify(customLevels));
+            renderCustomLevelsList();
+        }
+
+        function editCustomLevel(idx) {
+            editorData = JSON.parse(JSON.stringify(customLevels[idx]));
+            document.getElementById('editor-level-name').value = editorData.name;
+            document.getElementById('editor-length-display').innerText = editorData.length;
+            openEditor();
+        }
+    </script>
+</body>
+</html>
