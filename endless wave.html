@@ -1,0 +1,1508 @@
+<!DOCTYPE html>
+<html lang="fr" class="h-full w-full overflow-hidden bg-slate-950 select-none">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#020617" />
+  <title>Geometry Dash - 100% Wave Mode (GitHub & Mobile Ready)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Google Fonts: Orbitron & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Orbitron:wght@500;700;900&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    * {
+      touch-action: none;
+      -webkit-touch-callout: none;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      background-color: #020617;
+      color: #ffffff;
+    }
+
+    .font-orbitron {
+      font-family: 'Orbitron', sans-serif;
+    }
+
+    .neon-text-cyan { text-shadow: 0 0 12px rgba(6, 182, 212, 0.8), 0 0 24px rgba(6, 182, 212, 0.4); }
+    .neon-text-amber { text-shadow: 0 0 12px rgba(245, 158, 11, 0.8), 0 0 24px rgba(245, 158, 11, 0.4); }
+    .neon-text-rose { text-shadow: 0 0 12px rgba(244, 63, 94, 0.8), 0 0 24px rgba(244, 63, 94, 0.4); }
+
+    .gd-btn {
+      transition: transform 0.08s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.08s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.15s;
+      box-shadow: 0 5px 0 rgba(0, 0, 0, 0.5), inset 0 2px 0 rgba(255, 255, 255, 0.25);
+      cursor: pointer;
+    }
+    .gd-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+
+    .glass-panel {
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 2px solid rgba(255, 255, 255, 0.14);
+    }
+
+    canvas {
+      display: block;
+      width: 100vw;
+      height: 100vh;
+      touch-action: none;
+    }
+
+    @keyframes attemptSlide {
+      0% { transform: scale(0.6) translateY(-30px); opacity: 0; }
+      20% { transform: scale(1.05) translateY(0); opacity: 1; }
+      80% { transform: scale(1.0) translateY(0); opacity: 1; }
+      100% { transform: scale(0.9) translateY(20px); opacity: 0; }
+    }
+
+    .animate-attempt {
+      animation: attemptSlide 1.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .color-swatch {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease;
+    }
+    .color-swatch.active {
+      border-color: #38bdf8;
+      box-shadow: 0 0 10px #38bdf8;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+<body class="h-full w-full overflow-hidden bg-slate-950 text-white relative">
+
+  <!-- Main Game Canvas -->
+  <canvas id="gameCanvas" class="absolute inset-0 z-0 cursor-pointer"></canvas>
+
+  <!-- GD Attempt Banner -->
+  <div id="attemptBanner" class="absolute inset-0 z-20 pointer-events-none hidden flex items-center justify-center">
+    <div class="text-center px-4">
+      <h2 id="attemptBannerText" class="font-orbitron font-black text-4xl sm:text-6xl text-cyan-400 neon-text-cyan tracking-wider">
+        ESSAI 1
+      </h2>
+      <p id="practiceModeSubtext" class="hidden text-emerald-400 font-orbitron font-bold text-xs sm:text-sm tracking-widest mt-2 uppercase">
+        <i class="fa-solid fa-gem mr-1"></i> Mode Entraînement
+      </p>
+    </div>
+  </div>
+
+  <!-- Top Right Action Controls (Mobile Friendly) -->
+  <div class="absolute top-3 right-3 sm:top-4 sm:right-4 z-40 flex items-center gap-2">
+    <button id="fullscreenBtn" class="bg-slate-800/90 hover:bg-slate-700/90 text-cyan-400 p-2.5 sm:p-3 rounded-xl border border-slate-700 backdrop-blur transition gd-btn flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11" title="Plein Écran">
+      <i class="fa-solid fa-expand text-base sm:text-lg"></i>
+    </button>
+
+    <button id="garageToggleBtn" class="bg-cyan-600 hover:bg-cyan-500 text-slate-950 px-3 py-2 sm:px-3.5 sm:py-2.5 rounded-xl border border-cyan-300 backdrop-blur transition gd-btn flex items-center gap-1.5 sm:gap-2 font-orbitron text-xs font-black shadow-lg">
+      <i class="fa-solid fa-palette text-slate-950"></i>
+      <span class="hidden sm:inline">GARAGE WAVE</span>
+    </button>
+
+    <button id="pauseBtn" class="hidden bg-slate-800/90 hover:bg-slate-700/90 text-cyan-400 p-2.5 sm:p-3 rounded-xl border border-slate-700 backdrop-blur transition gd-btn flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11" title="Pause">
+      <i class="fa-solid fa-pause text-base sm:text-lg"></i>
+    </button>
+
+    <button id="soundToggleBtn" class="bg-slate-800/90 hover:bg-slate-700/90 text-cyan-400 p-2.5 sm:p-3 rounded-xl border border-slate-700 backdrop-blur transition gd-btn flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11" title="Son">
+      <i id="soundIcon" class="fa-solid fa-volume-high text-base sm:text-lg"></i>
+    </button>
+  </div>
+
+  <!-- In-Game HUD Overlay -->
+  <div id="hudOverlay" class="absolute top-3 left-3 sm:top-4 sm:left-4 z-20 hidden pointer-events-none flex flex-col gap-1.5 sm:gap-2">
+    <div class="flex items-center gap-2 sm:gap-4 bg-slate-900/90 backdrop-blur-md px-3 sm:px-4 py-2 rounded-2xl border border-slate-800 shadow-xl">
+      <div>
+        <div class="text-[8px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Niveau</div>
+        <div id="hudLevelName" class="font-orbitron text-xs sm:text-base font-black text-slate-100">Wave Madness</div>
+      </div>
+      <div class="h-6 sm:h-8 w-px bg-slate-800"></div>
+      <div>
+        <div class="text-[8px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Score</div>
+        <div id="hudProgressText" class="font-orbitron text-lg sm:text-2xl font-black text-cyan-400 neon-text-cyan">0%</div>
+      </div>
+      <div class="h-6 sm:h-8 w-px bg-slate-800"></div>
+      <div>
+        <div class="text-[8px] sm:text-[10px] uppercase tracking-widest text-slate-400 font-bold">Vitesse</div>
+        <div id="hudSpeedText" class="font-orbitron text-xs sm:text-base font-black text-amber-400">1.0x</div>
+      </div>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="w-48 sm:w-80 bg-slate-900/90 h-3 rounded-full overflow-hidden border border-slate-700/80 p-0.5 shadow-lg">
+      <div id="hudProgressBar" class="bg-gradient-to-r from-cyan-500 via-indigo-500 to-emerald-400 h-full rounded-full w-0 transition-all duration-75"></div>
+    </div>
+  </div>
+
+  <!-- Touch-Friendly Practice Mode Controls -->
+  <div id="practiceControls" class="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 hidden flex items-center gap-2 sm:gap-3 bg-slate-900/95 backdrop-blur-md p-2 rounded-2xl border border-slate-700 shadow-2xl">
+    <button id="addCheckpointBtn" class="gd-btn px-3 py-2 sm:px-4 sm:py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-orbitron font-bold text-xs flex items-center gap-1.5 active:scale-95">
+      <i class="fa-solid fa-bookmark text-amber-300"></i>
+      <span>+ Checkpoint</span>
+    </button>
+    <button id="removeCheckpointBtn" class="gd-btn px-3 py-2 sm:px-4 sm:py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl font-orbitron font-bold text-xs flex items-center gap-1.5 active:scale-95">
+      <i class="fa-solid fa-trash"></i>
+      <span>Effacer</span>
+    </button>
+  </div>
+
+  <!-- MAIN MENU OVERLAY -->
+  <div id="mainMenu" class="absolute inset-0 z-30 flex items-center justify-center p-3 sm:p-4 bg-slate-950/90 backdrop-blur-md overflow-y-auto">
+    <div class="glass-panel p-5 sm:p-8 rounded-3xl max-w-xl w-full text-center flex flex-col items-center gap-4 sm:gap-6 shadow-2xl relative border-cyan-500/30 my-auto">
+      
+      <!-- Title Header -->
+      <div class="flex flex-col items-center">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-tr from-cyan-400 via-indigo-500 to-teal-300 rounded-2xl flex items-center justify-center mb-1.5 shadow-lg shadow-cyan-500/40 rotate-6">
+          <i class="fa-solid fa-shapes text-2xl sm:text-3xl text-slate-950"></i>
+        </div>
+        <h1 class="font-orbitron text-2xl sm:text-4xl font-black tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-teal-300 to-indigo-400 neon-text-cyan">
+          GD 100% WAVE
+        </h1>
+        <p class="text-[10px] sm:text-xs text-cyan-300/80 uppercase tracking-widest font-bold mt-1">Écran tactile & Clavier • Pentes & Blocs Carrés</p>
+      </div>
+
+      <!-- Mode Selector: Normal / Practice -->
+      <div class="flex items-center justify-center gap-2 bg-slate-900/90 p-1.5 rounded-2xl border border-slate-800 w-full max-w-xs">
+        <button id="modeNormalBtn" class="flex-1 py-2 rounded-xl font-orbitron font-bold text-xs bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md transition">
+          <i class="fa-solid fa-trophy mr-1"></i> NORMAL
+        </button>
+        <button id="modePracticeBtn" class="flex-1 py-2 rounded-xl font-orbitron font-bold text-xs text-slate-400 hover:text-white transition">
+          <i class="fa-solid fa-gem mr-1"></i> ENTRAÎNEMENT
+        </button>
+      </div>
+
+      <!-- Levels Selector -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3.5 w-full">
+        
+        <!-- Level 1: Wave Madness -->
+        <div data-level="WAVE_MADNESS" class="level-card glass-panel p-3.5 rounded-2xl border-2 border-emerald-500/50 hover:border-emerald-400 cursor-pointer transition flex flex-col justify-between gap-2 text-left relative overflow-hidden group ring-4 ring-cyan-500/40">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[9px] font-bold font-orbitron text-emerald-400 uppercase tracking-widest">FACILE • 1★</span>
+              <h3 class="font-orbitron font-black text-base sm:text-lg text-white group-hover:text-emerald-300 transition">WAVE MADNESS</h3>
+            </div>
+            <div class="w-8 h-8 bg-emerald-500/20 rounded-xl flex items-center justify-center text-emerald-400 text-sm border border-emerald-500/40">
+              <i class="fa-solid fa-water"></i>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">Pentes 45° basiques & couloirs larges pour apprendre le rythme tactile.</p>
+          <div class="flex justify-between items-center text-[11px] pt-1.5 border-t border-slate-800">
+            <span class="text-slate-500 font-bold">RECORD :</span>
+            <span id="best_WAVE_MADNESS" class="font-orbitron font-bold text-emerald-400">0%</span>
+          </div>
+        </div>
+
+        <!-- Level 2: Polargeist Wave -->
+        <div data-level="POLARGEIST_WAVE" class="level-card glass-panel p-3.5 rounded-2xl border-2 border-cyan-500/30 hover:border-cyan-400 cursor-pointer transition flex flex-col justify-between gap-2 text-left relative overflow-hidden group">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[9px] font-bold font-orbitron text-cyan-400 uppercase tracking-widest">MOYEN • 4★</span>
+              <h3 class="font-orbitron font-black text-base sm:text-lg text-white group-hover:text-cyan-300 transition">POLARGEIST WAVE</h3>
+            </div>
+            <div class="w-8 h-8 bg-cyan-500/20 rounded-xl flex items-center justify-center text-cyan-400 text-sm border border-cyan-500/40">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">Changements de vitesse, inversions de gravité et Mini-Wave.</p>
+          <div class="flex justify-between items-center text-[11px] pt-1.5 border-t border-slate-800">
+            <span class="text-slate-500 font-bold">RECORD :</span>
+            <span id="best_POLARGEIST_WAVE" class="font-orbitron font-bold text-cyan-400">0%</span>
+          </div>
+        </div>
+
+        <!-- Level 3: Deadlocked Wave -->
+        <div data-level="DEADLOCKED_WAVE" class="level-card glass-panel p-3.5 rounded-2xl border-2 border-rose-500/30 hover:border-rose-400 cursor-pointer transition flex flex-col justify-between gap-2 text-left relative overflow-hidden group">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[9px] font-bold font-orbitron text-rose-400 uppercase tracking-widest">DÉMON ÉQUILIBRÉ • 15★</span>
+              <h3 class="font-orbitron font-black text-base sm:text-lg text-white group-hover:text-rose-300 transition">DEADLOCKED WAVE</h3>
+            </div>
+            <div class="w-8 h-8 bg-rose-500/20 rounded-xl flex items-center justify-center text-rose-400 text-sm border border-rose-500/40">
+              <i class="fa-solid fa-skull"></i>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">Intense mais 100% faisable sur écran mobile avec hitboxes tolérantes !</p>
+          <div class="flex justify-between items-center text-[11px] pt-1.5 border-t border-slate-800">
+            <span class="text-slate-500 font-bold">RECORD :</span>
+            <span id="best_DEADLOCKED_WAVE" class="font-orbitron font-bold text-rose-400">0%</span>
+          </div>
+        </div>
+
+        <!-- Level 4: Endless Wave -->
+        <div data-level="ENDLESS_WAVE" class="level-card glass-panel p-3.5 rounded-2xl border-2 border-amber-500/30 hover:border-amber-400 cursor-pointer transition flex flex-col justify-between gap-2 text-left relative overflow-hidden group">
+          <div class="flex justify-between items-start">
+            <div>
+              <span class="text-[9px] font-bold font-orbitron text-amber-400 uppercase tracking-widest">INFINI • ⚡</span>
+              <h3 class="font-orbitron font-black text-base sm:text-lg text-white group-hover:text-amber-300 transition">ENDLESS WAVE</h3>
+            </div>
+            <div class="w-8 h-8 bg-amber-500/20 rounded-xl flex items-center justify-center text-amber-400 text-sm border border-amber-500/40">
+              <i class="fa-solid fa-infinity"></i>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400 leading-tight">Génération infinie de décors avec choix de la difficulté.</p>
+          <div class="flex justify-between items-center text-[11px] pt-1.5 border-t border-slate-800">
+            <span class="text-slate-500 font-bold">DISTANCE :</span>
+            <span id="best_ENDLESS_WAVE" class="font-orbitron font-bold text-amber-400">0m</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Endless Difficulty Selector -->
+      <div id="endlessDifficultyContainer" class="hidden w-full bg-slate-900/90 p-2.5 rounded-2xl border border-slate-800 flex flex-col gap-2">
+        <div class="text-[10px] font-orbitron font-bold text-slate-400 uppercase tracking-widest text-left">Difficulté Infinitée</div>
+        <div class="grid grid-cols-4 gap-1.5">
+          <button data-diff="EASY" class="diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-cyan-600/30 border border-cyan-400 text-cyan-300">FACILE</button>
+          <button data-diff="MEDIUM" class="diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-slate-800 border border-slate-700 text-slate-400">NORMAL</button>
+          <button data-diff="HARD" class="diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-slate-800 border border-slate-700 text-slate-400">HARD</button>
+          <button data-diff="DEMON" class="diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-slate-800 border border-slate-700 text-slate-400">DÉMON</button>
+        </div>
+      </div>
+
+      <!-- Start Button -->
+      <button id="startPlayBtn" class="gd-btn w-full py-3.5 bg-gradient-to-r from-cyan-400 via-teal-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-orbitron font-black text-base sm:text-lg rounded-2xl tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-cyan-500/30">
+        <i class="fa-solid fa-play text-xl"></i> JOUER MAINTENANT
+      </button>
+
+    </div>
+  </div>
+
+  <!-- GARAGE / CUSTOMIZATION MODAL -->
+  <div id="garageModal" class="absolute inset-0 z-50 hidden flex items-center justify-center p-4 bg-slate-950/95 backdrop-blur-xl overflow-y-auto">
+    <div class="glass-panel p-5 sm:p-7 rounded-3xl max-w-md w-full flex flex-col gap-4 shadow-2xl border-cyan-500/40 relative my-auto">
+      
+      <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 bg-cyan-500/20 border border-cyan-400/50 rounded-xl flex items-center justify-center text-cyan-400 text-lg">
+            <i class="fa-solid fa-palette"></i>
+          </div>
+          <div>
+            <h2 class="font-orbitron font-black text-lg text-white">GARAGE WAVE</h2>
+            <p class="text-[10px] text-slate-400">Skins & Traînées Néon</p>
+          </div>
+        </div>
+        <button id="closeGarageBtn" class="text-slate-400 hover:text-white text-xl p-2"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+
+      <div class="w-full bg-slate-900/90 rounded-2xl p-2.5 border border-slate-800 flex flex-col items-center justify-center relative overflow-hidden">
+        <canvas id="previewCanvas" width="280" height="90" class="rounded-xl border border-slate-800 bg-slate-950/80"></canvas>
+      </div>
+
+      <div class="flex flex-col gap-3.5 text-left">
+        <div>
+          <label class="block text-[11px] font-bold font-orbitron text-slate-300 uppercase mb-1.5">Style Flèche</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button data-skin="skin_arrow" class="skin-select-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold active border-cyan-400">Classique</button>
+            <button data-skin="skin_dart" class="skin-select-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold">Fléchette</button>
+            <button data-skin="skin_wing" class="skin-select-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold">Ailes</button>
+            <button data-skin="skin_demon" class="skin-select-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold">Démon</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold font-orbitron text-slate-300 uppercase mb-1.5">Effet de Traînée</label>
+          <div class="grid grid-cols-4 gap-1.5">
+            <button data-trailstyle="SOLID" class="trailstyle-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold text-cyan-400 active border-cyan-400">Solide</button>
+            <button data-trailstyle="RAINBOW" class="trailstyle-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold text-amber-400">Arc-en-Ciel</button>
+            <button data-trailstyle="FLAME" class="trailstyle-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold text-rose-400">Flammes</button>
+            <button data-trailstyle="PULSE" class="trailstyle-btn p-2 rounded-xl bg-slate-900 border border-slate-700 font-orbitron text-[10px] font-bold text-emerald-400">Pulsation</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold font-orbitron text-slate-300 uppercase mb-1">Couleur Primaire</label>
+          <div id="primaryColorContainer" class="flex flex-wrap gap-1.5"></div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-bold font-orbitron text-slate-300 uppercase mb-1">Couleur Secondaire</label>
+          <div id="secondaryColorContainer" class="flex flex-wrap gap-1.5"></div>
+        </div>
+      </div>
+
+      <button id="saveGarageBtn" class="gd-btn w-full py-3 bg-gradient-to-r from-cyan-400 to-indigo-500 hover:from-cyan-300 hover:to-indigo-400 text-slate-950 font-orbitron font-black text-sm rounded-2xl flex items-center justify-center gap-2">
+        <i class="fa-solid fa-check"></i> SAUVEGARDER
+      </button>
+
+    </div>
+  </div>
+
+  <!-- PAUSE MENU OVERLAY -->
+  <div id="pauseModal" class="absolute inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/85 backdrop-blur-md">
+    <div class="glass-panel p-6 rounded-3xl max-w-xs w-full text-center flex flex-col items-center gap-4 border-amber-500/30">
+      <div class="w-12 h-12 bg-amber-500/20 text-amber-400 border border-amber-500/40 rounded-2xl flex items-center justify-center text-xl">
+        <i class="fa-solid fa-pause"></i>
+      </div>
+      <h2 class="font-orbitron text-xl font-black text-amber-400">PAUSE</h2>
+
+      <div class="flex flex-col gap-2 w-full mt-1">
+        <button id="resumeBtn" class="gd-btn py-3 bg-gradient-to-r from-amber-500 to-emerald-500 text-slate-950 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center gap-2">
+          <i class="fa-solid fa-play"></i> REPRENDRE
+        </button>
+        <button id="restartPauseBtn" class="gd-btn py-2.5 bg-cyan-600 text-slate-950 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center gap-2">
+          <i class="fa-solid fa-rotate-right"></i> RECOMMENCER
+        </button>
+        <button id="menuPauseBtn" class="gd-btn py-2.5 bg-slate-800 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center gap-2 border border-slate-700">
+          <i class="fa-solid fa-house"></i> MENU
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME OVER OVERLAY -->
+  <div id="gameOverModal" class="absolute inset-0 z-40 hidden flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
+    <div class="glass-panel p-6 rounded-3xl max-w-sm w-full text-center flex flex-col items-center gap-4 border-rose-500/40">
+      
+      <div class="w-14 h-14 bg-rose-500/20 text-rose-500 border border-rose-500/40 rounded-2xl flex items-center justify-center text-2xl">
+        <i class="fa-solid fa-explosion"></i>
+      </div>
+
+      <h2 class="font-orbitron text-2xl font-black text-rose-500 neon-text-rose">CRASH !</h2>
+
+      <div class="w-full bg-slate-900/90 p-3 rounded-2xl border border-slate-800 flex flex-col gap-2">
+        <div class="flex justify-between items-center">
+          <span class="text-xs text-slate-400 font-semibold uppercase">Score atteint</span>
+          <span id="finalProgressText" class="font-orbitron font-bold text-xl text-cyan-400">0%</span>
+        </div>
+        
+        <div id="newRecordBadge" class="hidden bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-bold py-1 px-2.5 rounded-lg text-center font-orbitron animate-pulse">
+          <i class="fa-solid fa-trophy mr-1"></i> NOUVEAU RECORD !
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 gap-2.5 w-full">
+        <button id="retryBtn" class="gd-btn py-3 bg-cyan-500 text-slate-950 font-orbitron font-bold rounded-xl text-xs flex items-center justify-center gap-1.5">
+          <i class="fa-solid fa-rotate-right"></i> REESSAYER
+        </button>
+        <button id="menuBtn" class="gd-btn py-3 bg-slate-800 text-white font-orbitron font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 border border-slate-700">
+          <i class="fa-solid fa-house"></i> MENU
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* Palette & Customization defaults */
+    const PALETTE_COLORS = [
+      '#06b6d4', '#22c55e', '#f59e0b', '#f43f5e', 
+      '#a855f7', '#3b82f6', '#ec4899', '#ffffff', '#1e293b'
+    ];
+
+    const customSettings = {
+      skin: 'skin_arrow',
+      primaryColor: '#06b6d4',
+      secondaryColor: '#f59e0b',
+      trailStyle: 'SOLID'
+    };
+
+    const savedCustom = localStorage.getItem('gd_wave_custom');
+    if (savedCustom) {
+      try { Object.assign(customSettings, JSON.parse(savedCustom)); } catch (e) {}
+    }
+
+    let canvas, ctx;
+    let previewCanvas, previewCtx;
+    let selectedLevelKey = 'WAVE_MADNESS';
+    let endlessDifficulty = 'EASY';
+    let isPracticeMode = false;
+    let gameState = 'MENU';
+    let lastTime = 0;
+    let attemptCounter = 1;
+
+    let checkpoints = [];
+
+    /* Player Wave object with forgiving mobile hitboxes */
+    const player = {
+      x: 0,
+      y: 0,
+      visualSize: 20,
+      hitboxRadius: 7.5,
+      isMini: false,
+      gravity: 1,
+      speedMultiplier: 1.0,
+      isHolding: false,
+      trail: [],
+      maxTrailLength: 40
+    };
+
+    let worldX = 0;
+    let baseSpeed = 7.5;
+    let levelLength = 10000;
+    let shakeDuration = 0;
+    let shakeIntensity = 0;
+    let bgPulse = 0;
+
+    const BLOCK_SIZE = 40;
+    let levelGridBlocks = [];
+    let levelSlopes = [];
+    let levelObstacles = [];
+    let levelPortals = [];
+
+    class WaveAudioEngine {
+      constructor() {
+        this.ctx = null;
+        this.isMuted = false;
+        this.isPlaying = false;
+        this.tempo = 145;
+        this.step = 0;
+        this.timer = null;
+        this.unlocked = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+        this.unlocked = true;
+      }
+
+      toggleMute() {
+        this.isMuted = !this.isMuted;
+        return this.isMuted;
+      }
+
+      playPortalSFX() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(300, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(1400, this.ctx.currentTime + 0.12);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.12);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.12);
+      }
+
+      playCrash() {
+        if (this.isMuted || !this.ctx) return;
+        this.init();
+        const bufferSize = this.ctx.sampleRate * 0.3;
+        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
+        const data = buffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
+
+        const noise = this.ctx.createBufferSource();
+        noise.buffer = buffer;
+
+        const filter = this.ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(1200, this.ctx.currentTime);
+        filter.frequency.exponentialRampToValueAtTime(40, this.ctx.currentTime + 0.3);
+
+        const gain = this.ctx.createGain();
+        gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+
+        noise.connect(filter);
+        filter.connect(gain);
+        gain.connect(this.ctx.destination);
+        noise.start();
+        noise.stop(this.ctx.currentTime + 0.3);
+      }
+
+      startMusic() {
+        if (this.isPlaying || this.isMuted) return;
+        this.init();
+        this.isPlaying = true;
+        this.step = 0;
+        const stepTime = (60 / this.tempo) / 4 * 1000;
+        this.timer = setInterval(() => this.onBeat(), stepTime);
+      }
+
+      stopMusic() {
+        this.isPlaying = false;
+        if (this.timer) {
+          clearInterval(this.timer);
+          this.timer = null;
+        }
+      }
+
+      onBeat() {
+        if (this.isMuted || !this.ctx || gameState !== 'PLAYING') return;
+
+        const time = this.ctx.currentTime;
+        const s = this.step % 16;
+
+        if (s % 4 === 0) {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.frequency.setValueAtTime(160, time);
+          osc.frequency.exponentialRampToValueAtTime(32, time + 0.08);
+          gain.gain.setValueAtTime(0.25, time);
+          gain.gain.linearRampToValueAtTime(0.01, time + 0.08);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(time);
+          osc.stop(time + 0.08);
+          bgPulse = 1.0;
+        }
+
+        const scale = [220, 261.63, 293.66, 329.63, 392.00, 440.00];
+        if (s % 2 === 0) {
+          const freq = scale[(s + Math.floor(worldX / 120)) % scale.length];
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(freq, time);
+
+          gain.gain.setValueAtTime(0.04, time);
+          gain.gain.exponentialRampToValueAtTime(0.002, time + 0.09);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(time);
+          osc.stop(time + 0.09);
+        }
+
+        this.step++;
+      }
+    }
+
+    let audioEngine = null;
+
+    class ParticleSystem {
+      constructor() {
+        this.particles = [];
+      }
+
+      spawnExplosion(x, y, color) {
+        for (let i = 0; i < 35; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = Math.random() * 9 + 2;
+          this.particles.push({
+            x: x, y: y,
+            vx: Math.cos(angle) * speed,
+            vy: Math.sin(angle) * speed,
+            size: Math.random() * 4 + 2,
+            color: color,
+            alpha: 1, life: 1, decay: Math.random() * 0.03 + 0.02
+          });
+        }
+      }
+
+      spawnSparks(x, y, color) {
+        if (Math.random() < 0.4) return;
+        this.particles.push({
+          x: x, y: y,
+          vx: -(baseSpeed * player.speedMultiplier) * 0.2 + (Math.random() - 0.5) * 2,
+          vy: (Math.random() - 0.5) * 3,
+          size: Math.random() * 3 + 1,
+          color: color,
+          alpha: 0.9, life: 1, decay: 0.1
+        });
+      }
+
+      update() {
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+          const p = this.particles[i];
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= p.decay;
+          p.alpha = Math.max(0, p.life);
+          if (p.life <= 0) this.particles.splice(i, 1);
+        }
+      }
+
+      draw(ctx) {
+        ctx.save();
+        for (const p of this.particles) {
+          ctx.globalAlpha = p.alpha;
+          ctx.fillStyle = p.color;
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+      }
+    }
+
+    const particles = new ParticleSystem();
+
+    function generateWaveMadness() {
+      levelGridBlocks = [];
+      levelSlopes = [];
+      levelObstacles = [];
+      levelPortals = [];
+
+      const H = canvas.height;
+      const groundY = H - 80;
+      const ceilY = 80;
+
+      for (let x = 0; x <= 10000; x += BLOCK_SIZE) {
+        levelGridBlocks.push({ x: x, y: 0, w: BLOCK_SIZE, h: ceilY });
+        levelGridBlocks.push({ x: x, y: groundY, w: BLOCK_SIZE, h: H - groundY });
+      }
+
+      let currentX = 600;
+      while (currentX < 9000) {
+        levelSlopes.push({ x: currentX, y: groundY - BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_UP_45' });
+        levelGridBlocks.push({ x: currentX + BLOCK_SIZE, y: groundY - BLOCK_SIZE, w: BLOCK_SIZE * 3, h: BLOCK_SIZE });
+        levelSlopes.push({ x: currentX + BLOCK_SIZE * 4, y: groundY - BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_DOWN_45' });
+
+        if (currentX === 1800) levelPortals.push({ type: 'SPEED_2X', x: currentX + 200, y: H / 2, size: 40 });
+        if (currentX === 4200) levelPortals.push({ type: 'SIZE_MINI', x: currentX + 200, y: H / 2, size: 40 });
+        if (currentX === 6500) levelPortals.push({ type: 'SIZE_NORMAL', x: currentX + 200, y: H / 2, size: 40 });
+
+        if (currentX > 1200 && currentX % 800 === 0) {
+          levelObstacles.push({ type: 'SAWBLADE', x: currentX + 150, y: H / 2, radius: 22 });
+          levelGridBlocks.push({ x: currentX + 300, y: ceilY, w: BLOCK_SIZE * 2, h: BLOCK_SIZE * 2 });
+          levelSlopes.push({ x: currentX + 300, y: ceilY + BLOCK_SIZE * 2, size: BLOCK_SIZE, type: 'SLOPE_CEIL_DOWN' });
+        }
+
+        currentX += 700;
+      }
+    }
+
+    function generatePolargeistWave() {
+      levelGridBlocks = [];
+      levelSlopes = [];
+      levelObstacles = [];
+      levelPortals = [];
+
+      const H = canvas.height;
+      const groundY = H - 90;
+      const ceilY = 90;
+
+      for (let x = 0; x <= 13000; x += BLOCK_SIZE) {
+        levelGridBlocks.push({ x: x, y: 0, w: BLOCK_SIZE, h: ceilY });
+        levelGridBlocks.push({ x: x, y: groundY, w: BLOCK_SIZE, h: H - groundY });
+      }
+
+      let currentX = 500;
+      while (currentX < 12000) {
+        levelSlopes.push({ x: currentX, y: groundY - BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_UP_45' });
+        levelSlopes.push({ x: currentX + BLOCK_SIZE, y: groundY - BLOCK_SIZE * 2, size: BLOCK_SIZE, type: 'SLOPE_UP_45' });
+        levelGridBlocks.push({ x: currentX + BLOCK_SIZE * 2, y: groundY - BLOCK_SIZE * 2, w: BLOCK_SIZE * 2, h: BLOCK_SIZE * 2 });
+        levelSlopes.push({ x: currentX + BLOCK_SIZE * 4, y: groundY - BLOCK_SIZE * 2, size: BLOCK_SIZE, type: 'SLOPE_DOWN_45' });
+
+        if (currentX === 1200) levelPortals.push({ type: 'SPEED_2X', x: currentX, y: H / 2, size: 40 });
+        if (currentX === 3500) levelPortals.push({ type: 'GRAVITY_BLUE', x: currentX, y: H / 2, size: 40 });
+        if (currentX === 6000) levelPortals.push({ type: 'GRAVITY_YELLOW', x: currentX, y: H / 2, size: 40 });
+
+        if (currentX % 600 === 0) {
+          levelObstacles.push({ type: 'SAWBLADE', x: currentX + 200, y: H / 2 - 20, radius: 24 });
+        }
+
+        currentX += 650;
+      }
+    }
+
+    function generateDeadlockedWave() {
+      levelGridBlocks = [];
+      levelSlopes = [];
+      levelObstacles = [];
+      levelPortals = [];
+
+      const H = canvas.height;
+      const groundY = H - 110;
+      const ceilY = 110;
+
+      for (let x = 0; x <= 16000; x += BLOCK_SIZE) {
+        levelGridBlocks.push({ x: x, y: 0, w: BLOCK_SIZE, h: ceilY });
+        levelGridBlocks.push({ x: x, y: groundY, w: BLOCK_SIZE, h: H - groundY });
+      }
+
+      let currentX = 600;
+      while (currentX < 14500) {
+        levelSlopes.push({ x: currentX, y: groundY - BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_UP_45' });
+        levelGridBlocks.push({ x: currentX + BLOCK_SIZE, y: groundY - BLOCK_SIZE, w: BLOCK_SIZE * 2, h: BLOCK_SIZE });
+        levelGridBlocks.push({ x: currentX + BLOCK_SIZE, y: ceilY, w: BLOCK_SIZE * 2, h: BLOCK_SIZE });
+        levelSlopes.push({ x: currentX + BLOCK_SIZE * 3, y: ceilY + BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_CEIL_UP' });
+
+        if (currentX === 800) levelPortals.push({ type: 'SPEED_3X', x: currentX, y: H / 2, size: 40 });
+        if (currentX === 2500) levelPortals.push({ type: 'SIZE_MINI', x: currentX, y: H / 2, size: 40 });
+        if (currentX === 5000) levelPortals.push({ type: 'GRAVITY_BLUE', x: currentX, y: H / 2, size: 40 });
+        if (currentX === 8000) levelPortals.push({ type: 'GRAVITY_YELLOW', x: currentX, y: H / 2, size: 40 });
+
+        if (currentX % 500 === 0) {
+          levelObstacles.push({ type: 'SAWBLADE', x: currentX + 220, y: H / 2, radius: 23 });
+        }
+
+        currentX += 550;
+      }
+    }
+
+    function generateEndlessWaveChunk() {
+      const H = canvas.height;
+      const lastX = levelGridBlocks.length > 0 ? levelGridBlocks[levelGridBlocks.length - 1].x : 0;
+
+      if (lastX < worldX + canvas.width + 1200) {
+        let gapHeight = 240;
+        if (endlessDifficulty === 'MEDIUM') gapHeight = 190;
+        if (endlessDifficulty === 'HARD') gapHeight = 150;
+        if (endlessDifficulty === 'DEMON') gapHeight = 115;
+
+        const groundY = H / 2 + gapHeight / 2;
+        const ceilY = H / 2 - gapHeight / 2;
+
+        for (let x = lastX + BLOCK_SIZE; x < lastX + 1200; x += BLOCK_SIZE) {
+          levelGridBlocks.push({ x: x, y: 0, w: BLOCK_SIZE, h: ceilY });
+          levelGridBlocks.push({ x: x, y: groundY, w: BLOCK_SIZE, h: H - groundY });
+
+          if (x % 360 === 0) {
+            levelSlopes.push({ x: x, y: groundY - BLOCK_SIZE, size: BLOCK_SIZE, type: 'SLOPE_UP_45' });
+            levelObstacles.push({ type: 'SAWBLADE', x: x + 180, y: H / 2, radius: 22 });
+          }
+        }
+      }
+    }
+
+    function updatePlayerPhysics(dt) {
+      const effectiveSpeed = baseSpeed * player.speedMultiplier;
+      worldX += effectiveSpeed;
+
+      const waveVerticalSpeed = effectiveSpeed * (player.isMini ? 1.25 : 1.0);
+      let targetVy = (player.isHolding ? -waveVerticalSpeed : waveVerticalSpeed) * player.gravity;
+
+      let nextY = player.y + targetVy;
+      const pWorldX = player.x + worldX;
+
+      // Slope sliding logic
+      for (const slope of levelSlopes) {
+        if (pWorldX >= slope.x && pWorldX <= slope.x + slope.size) {
+          const relX = pWorldX - slope.x;
+
+          if (slope.type === 'SLOPE_UP_45') {
+            const slopeY = slope.y + slope.size - relX;
+            if (nextY + player.hitboxRadius >= slopeY) {
+              nextY = slopeY - player.hitboxRadius;
+            }
+          } else if (slope.type === 'SLOPE_DOWN_45') {
+            const slopeY = slope.y + relX;
+            if (nextY + player.hitboxRadius >= slopeY) {
+              nextY = slopeY - player.hitboxRadius;
+            }
+          } else if (slope.type === 'SLOPE_CEIL_DOWN') {
+            const slopeY = slope.y + relX;
+            if (nextY - player.hitboxRadius <= slopeY) {
+              nextY = slopeY + player.hitboxRadius;
+            }
+          }
+        }
+      }
+
+      player.y = nextY;
+
+      player.trail.unshift({ x: player.x + worldX, y: player.y });
+      if (player.trail.length > player.maxTrailLength) player.trail.pop();
+
+      particles.spawnSparks(player.x, player.y, customSettings.secondaryColor);
+
+      checkSquareBlockCollisions();
+      checkPortalsAndObstacles();
+    }
+
+    function checkSquareBlockCollisions() {
+      const pWorldX = player.x + worldX;
+      const r = player.hitboxRadius;
+
+      for (const b of levelGridBlocks) {
+        if (pWorldX + r > b.x && pWorldX - r < b.x + b.w) {
+          if (player.y + r > b.y && player.y - r < b.y + b.h) {
+            triggerCrash();
+            return;
+          }
+        }
+      }
+    }
+
+    function checkPortalsAndObstacles() {
+      const pWorldX = player.x + worldX;
+
+      for (const portal of levelPortals) {
+        if (!portal.triggered && Math.abs(pWorldX - portal.x) < 25 && Math.abs(player.y - portal.y) < 50) {
+          portal.triggered = true;
+          if (audioEngine) audioEngine.playPortalSFX();
+
+          if (portal.type === 'SPEED_1X') player.speedMultiplier = 1.0;
+          if (portal.type === 'SPEED_2X') player.speedMultiplier = 1.4;
+          if (portal.type === 'SPEED_3X') player.speedMultiplier = 1.8;
+
+          if (portal.type === 'GRAVITY_BLUE') player.gravity = -1;
+          if (portal.type === 'GRAVITY_YELLOW') player.gravity = 1;
+
+          if (portal.type === 'SIZE_MINI') { player.isMini = true; player.hitboxRadius = 5.0; }
+          if (portal.type === 'SIZE_NORMAL') { player.isMini = false; player.hitboxRadius = 7.5; }
+
+          document.getElementById('hudSpeedText').innerText = `${player.speedMultiplier.toFixed(1)}x`;
+          particles.spawnExplosion(player.x, player.y, customSettings.secondaryColor);
+        }
+      }
+
+      for (const obs of levelObstacles) {
+        if (obs.type === 'SAWBLADE') {
+          const dx = pWorldX - obs.x;
+          const dy = player.y - obs.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < obs.radius + player.hitboxRadius) {
+            triggerCrash();
+            return;
+          }
+        }
+      }
+    }
+
+    function triggerCrash() {
+      if (gameState !== 'PLAYING') return;
+
+      if (isPracticeMode && checkpoints.length > 0) {
+        const cp = checkpoints[checkpoints.length - 1];
+        worldX = cp.worldX;
+        player.y = cp.y;
+        player.gravity = cp.gravity;
+        player.isMini = cp.isMini;
+        player.hitboxRadius = cp.isMini ? 5.0 : 7.5;
+        player.speedMultiplier = cp.speedMultiplier;
+        particles.spawnExplosion(player.x, player.y, '#22c55e');
+        return;
+      }
+
+      gameState = 'GAMEOVER';
+      if (audioEngine) {
+        audioEngine.stopMusic();
+        audioEngine.playCrash();
+      }
+
+      shakeDuration = 18;
+      shakeIntensity = 8;
+      particles.spawnExplosion(player.x, player.y, customSettings.primaryColor);
+
+      const progPercent = Math.min(100, Math.floor((worldX / levelLength) * 100));
+      const key = `gd_best_${selectedLevelKey}`;
+      const savedBest = parseInt(localStorage.getItem(key) || '0', 10);
+      let isNewRecord = false;
+
+      if (progPercent > savedBest) {
+        localStorage.setItem(key, progPercent);
+        isNewRecord = true;
+      }
+
+      document.getElementById('finalProgressText').innerText = `${progPercent}%`;
+      document.getElementById('pauseBtn').classList.add('hidden');
+
+      const badge = document.getElementById('newRecordBadge');
+      if (isNewRecord && progPercent > 0) badge.classList.remove('hidden');
+      else badge.classList.add('hidden');
+
+      setTimeout(() => {
+        document.getElementById('gameOverModal').classList.remove('hidden');
+      }, 300);
+    }
+
+    function drawBackground() {
+      const bgGradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      const pulse = Math.floor(bgPulse * 20);
+      bgGradient.addColorStop(0, `rgb(${8 + pulse}, ${14 + pulse}, ${28 + pulse})`);
+      bgGradient.addColorStop(1, '#020617');
+
+      ctx.fillStyle = bgGradient;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      ctx.strokeStyle = `rgba(6, 182, 212, ${0.07 + bgPulse * 0.08})`;
+      ctx.lineWidth = 1;
+
+      const gridSize = BLOCK_SIZE;
+      const offsetX = -(worldX % gridSize);
+
+      for (let x = offsetX; x < canvas.width; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, canvas.height);
+        ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGridBlocksAndSlopes() {
+      ctx.save();
+      ctx.fillStyle = '#090d16';
+      ctx.strokeStyle = customSettings.primaryColor;
+      ctx.lineWidth = 2.5;
+      ctx.shadowColor = customSettings.primaryColor;
+      ctx.shadowBlur = 6;
+
+      for (const b of levelGridBlocks) {
+        const screenX = b.x - worldX;
+        if (screenX + b.w < -50 || screenX > canvas.width + 50) continue;
+
+        ctx.fillRect(screenX, b.y, b.w, b.h);
+        ctx.strokeRect(screenX, b.y, b.w, b.h);
+      }
+
+      for (const slope of levelSlopes) {
+        const screenX = slope.x - worldX;
+        if (screenX + slope.size < -50 || screenX > canvas.width + 50) continue;
+
+        ctx.beginPath();
+        if (slope.type === 'SLOPE_UP_45') {
+          ctx.moveTo(screenX, slope.y + slope.size);
+          ctx.lineTo(screenX + slope.size, slope.y);
+          ctx.lineTo(screenX + slope.size, slope.y + slope.size);
+        } else if (slope.type === 'SLOPE_DOWN_45') {
+          ctx.moveTo(screenX, slope.y);
+          ctx.lineTo(screenX + slope.size, slope.y + slope.size);
+          ctx.lineTo(screenX, slope.y + slope.size);
+        } else if (slope.type === 'SLOPE_CEIL_DOWN') {
+          ctx.moveTo(screenX, slope.y);
+          ctx.lineTo(screenX + slope.size, slope.y + slope.size);
+          ctx.lineTo(screenX, slope.y + slope.size);
+        } else if (slope.type === 'SLOPE_CEIL_UP') {
+          ctx.moveTo(screenX, slope.y + slope.size);
+          ctx.lineTo(screenX + slope.size, slope.y);
+          ctx.lineTo(screenX, slope.y);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+
+    function drawPortalsAndObstacles() {
+      ctx.save();
+
+      for (const portal of levelPortals) {
+        const screenX = portal.x - worldX;
+        if (screenX < -100 || screenX > canvas.width + 100) continue;
+
+        let portalColor = '#f59e0b';
+        if (portal.type === 'SPEED_2X') portalColor = '#22c55e';
+        if (portal.type === 'SPEED_3X') portalColor = '#f43f5e';
+        if (portal.type === 'GRAVITY_BLUE') portalColor = '#3b82f6';
+        if (portal.type === 'SIZE_MINI') portalColor = '#c084fc';
+
+        ctx.strokeStyle = portalColor;
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.85)';
+        ctx.lineWidth = 3;
+        ctx.shadowColor = portalColor;
+        ctx.shadowBlur = 10;
+
+        ctx.beginPath();
+        ctx.ellipse(screenX, portal.y, 13, 36, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      for (const obs of levelObstacles) {
+        const screenX = obs.x - worldX;
+        if (screenX < -100 || screenX > canvas.width + 100) continue;
+
+        obs.rotation = (obs.rotation || 0) + 0.12;
+        ctx.save();
+        ctx.translate(screenX, obs.y);
+        ctx.rotate(obs.rotation);
+
+        ctx.fillStyle = '#1e293b';
+        ctx.strokeStyle = '#f43f5e';
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#f43f5e';
+        ctx.shadowBlur = 8;
+
+        ctx.beginPath();
+        const teeth = 10;
+        for (let i = 0; i < teeth * 2; i++) {
+          const r = (i % 2 === 0) ? obs.radius : obs.radius * 0.65;
+          const a = (i / (teeth * 2)) * Math.PI * 2;
+          ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      for (const cp of checkpoints) {
+        const screenX = cp.worldX - worldX + player.x;
+        ctx.fillStyle = '#22c55e';
+        ctx.shadowColor = '#22c55e';
+        ctx.shadowBlur = 8;
+        ctx.beginPath();
+        ctx.arc(screenX, cp.y, 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.restore();
+    }
+
+    function drawWaveTrail() {
+      if (player.trail.length < 2) return;
+
+      ctx.save();
+      ctx.beginPath();
+      for (let i = 0; i < player.trail.length; i++) {
+        const pt = player.trail[i];
+        const screenX = pt.x - worldX;
+        if (i === 0) ctx.moveTo(screenX, pt.y);
+        else ctx.lineTo(screenX, pt.y);
+      }
+
+      let strokeColor = customSettings.secondaryColor;
+      if (customSettings.trailStyle === 'RAINBOW') {
+        const grad = ctx.createLinearGradient(0, 0, canvas.width, 0);
+        grad.addColorStop(0, '#f43f5e');
+        grad.addColorStop(0.3, '#f59e0b');
+        grad.addColorStop(0.6, '#22c55e');
+        grad.addColorStop(1, '#06b6d4');
+        strokeColor = grad;
+      } else if (customSettings.trailStyle === 'FLAME') {
+        strokeColor = '#f97316';
+      }
+
+      ctx.strokeStyle = strokeColor;
+      ctx.lineWidth = player.isMini ? 4 : 7;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.shadowColor = customSettings.secondaryColor;
+      ctx.shadowBlur = 10;
+      ctx.stroke();
+
+      ctx.restore();
+    }
+
+    function drawWavePlayer(cCtx, px, py) {
+      cCtx.save();
+      cCtx.translate(px, py);
+
+      const angle = (player.isHolding ? -Math.PI / 4 : Math.PI / 4) * player.gravity;
+      cCtx.rotate(angle);
+
+      const size = player.isMini ? 14 : 20;
+
+      cCtx.fillStyle = customSettings.primaryColor;
+      cCtx.strokeStyle = customSettings.secondaryColor;
+      cCtx.lineWidth = 2.5;
+      cCtx.shadowColor = customSettings.secondaryColor;
+      cCtx.shadowBlur = 8;
+
+      cCtx.beginPath();
+      if (customSettings.skin === 'skin_dart') {
+        cCtx.moveTo(size * 1.3, 0);
+        cCtx.lineTo(-size * 0.9, -size * 0.6);
+        cCtx.lineTo(-size * 0.2, 0);
+        cCtx.lineTo(-size * 0.9, size * 0.6);
+      } else if (customSettings.skin === 'skin_wing') {
+        cCtx.moveTo(size * 1.2, 0);
+        cCtx.lineTo(-size * 0.7, -size * 0.9);
+        cCtx.lineTo(-size * 0.4, 0);
+        cCtx.lineTo(-size * 0.7, size * 0.9);
+      } else if (customSettings.skin === 'skin_demon') {
+        cCtx.moveTo(size * 1.4, 0);
+        cCtx.lineTo(-size * 0.8, -size * 0.8);
+        cCtx.lineTo(-size * 0.1, 0);
+        cCtx.lineTo(-size * 0.8, size * 0.8);
+      } else {
+        cCtx.moveTo(size * 1.2, 0);
+        cCtx.lineTo(-size * 0.7, -size * 0.7);
+        cCtx.lineTo(-size * 0.3, 0);
+        cCtx.lineTo(-size * 0.7, size * 0.7);
+      }
+      cCtx.closePath();
+      cCtx.fill();
+      cCtx.stroke();
+
+      cCtx.restore();
+    }
+
+    function renderPreview() {
+      if (!previewCtx) return;
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      drawWavePlayer(previewCtx, previewCanvas.width / 2, previewCanvas.height / 2);
+    }
+
+    function render() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      ctx.save();
+      if (shakeDuration > 0) {
+        const dx = (Math.random() - 0.5) * shakeIntensity;
+        const dy = (Math.random() - 0.5) * shakeIntensity;
+        ctx.translate(dx, dy);
+        shakeDuration--;
+      }
+
+      drawBackground();
+      drawGridBlocksAndSlopes();
+      drawPortalsAndObstacles();
+      drawWaveTrail();
+      particles.draw(ctx);
+
+      if (gameState !== 'GAMEOVER') {
+        drawWavePlayer(ctx, player.x, player.y);
+      }
+
+      ctx.restore();
+    }
+
+    function gameLoop(timestamp) {
+      if (!lastTime) lastTime = timestamp;
+      const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+      lastTime = timestamp;
+
+      if (gameState === 'PLAYING') {
+        if (selectedLevelKey === 'ENDLESS_WAVE') {
+          generateEndlessWaveChunk();
+        }
+        updatePlayerPhysics(dt);
+        particles.update();
+
+        const progPercent = Math.min(100, Math.floor((worldX / levelLength) * 100));
+        document.getElementById('hudProgressText').innerText = `${progPercent}%`;
+        document.getElementById('hudProgressBar').style.width = `${progPercent}%`;
+      } else {
+        particles.update();
+      }
+
+      render();
+      requestAnimationFrame(gameLoop);
+    }
+
+    function setupGarageUI() {
+      const renderColorPickers = (containerId, settingKey) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+
+        PALETTE_COLORS.forEach(color => {
+          const swatch = document.createElement('div');
+          swatch.className = `color-swatch ${customSettings[settingKey] === color ? 'active' : ''}`;
+          swatch.style.backgroundColor = color;
+          swatch.addEventListener('click', () => {
+            customSettings[settingKey] = color;
+            renderColorPickers(containerId, settingKey);
+            renderPreview();
+          });
+          container.appendChild(swatch);
+        });
+      };
+
+      renderColorPickers('primaryColorContainer', 'primaryColor');
+      renderColorPickers('secondaryColorContainer', 'secondaryColor');
+
+      document.querySelectorAll('.skin-select-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.skin-select-btn').forEach(b => b.classList.remove('active', 'border-cyan-400'));
+          const target = e.currentTarget;
+          target.classList.add('active', 'border-cyan-400');
+          customSettings.skin = target.getAttribute('data-skin');
+          renderPreview();
+        });
+      });
+
+      document.querySelectorAll('.trailstyle-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.trailstyle-btn').forEach(b => b.classList.remove('active', 'border-cyan-400'));
+          const target = e.currentTarget;
+          target.classList.add('active', 'border-cyan-400');
+          customSettings.trailStyle = target.getAttribute('data-trailstyle');
+        });
+      });
+
+      document.getElementById('saveGarageBtn').addEventListener('click', () => {
+        localStorage.setItem('gd_wave_custom', JSON.stringify(customSettings));
+        document.getElementById('garageModal').classList.add('hidden');
+      });
+
+      document.getElementById('closeGarageBtn').addEventListener('click', () => {
+        document.getElementById('garageModal').classList.add('hidden');
+      });
+
+      document.getElementById('garageToggleBtn').addEventListener('click', () => {
+        document.getElementById('garageModal').classList.remove('hidden');
+        renderPreview();
+      });
+    }
+
+    function setupControls() {
+      const handleHoldStart = (e) => {
+        if (audioEngine) audioEngine.init();
+        if (gameState === 'PLAYING') {
+          player.isHolding = true;
+        }
+      };
+
+      const handleHoldEnd = (e) => {
+        if (gameState === 'PLAYING') {
+          player.isHolding = false;
+        }
+      };
+
+      /* Mobile Touch Handling anywhere on canvas/screen */
+      canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        handleHoldStart(e);
+      }, { passive: false });
+
+      window.addEventListener('touchend', (e) => {
+        handleHoldEnd(e);
+      });
+
+      canvas.addEventListener('mousedown', (e) => {
+        if (e.button === 0) handleHoldStart(e);
+      });
+
+      window.addEventListener('mouseup', handleHoldEnd);
+
+      /* Keyboard controls */
+      window.addEventListener('keydown', (e) => {
+        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) {
+          if (document.activeElement && document.activeElement.tagName === 'BUTTON') {
+            document.activeElement.blur();
+          }
+          e.preventDefault();
+          handleHoldStart(e);
+        }
+
+        if (e.code === 'KeyZ' && isPracticeMode && gameState === 'PLAYING') {
+          checkpoints.push({
+            worldX: worldX,
+            y: player.y,
+            gravity: player.gravity,
+            isMini: player.isMini,
+            speedMultiplier: player.speedMultiplier
+          });
+        }
+
+        if (e.code === 'KeyX' && isPracticeMode && checkpoints.length > 0) {
+          checkpoints.pop();
+        }
+
+        if (e.code === 'KeyP' || e.code === 'Escape') {
+          if (gameState === 'PLAYING') pauseGame();
+          else if (gameState === 'PAUSED') resumeGame();
+        }
+      });
+
+      window.addEventListener('keyup', (e) => {
+        if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) handleHoldEnd(e);
+      });
+
+      /* UI Controls & Navigation */
+      document.querySelectorAll('.level-card').forEach(card => {
+        card.addEventListener('click', () => {
+          document.querySelectorAll('.level-card').forEach(c => c.classList.remove('border-emerald-500/50', 'ring-4', 'ring-cyan-500/40'));
+          card.classList.add('ring-4', 'ring-cyan-500/40');
+          selectedLevelKey = card.getAttribute('data-level');
+
+          const diffContainer = document.getElementById('endlessDifficultyContainer');
+          if (selectedLevelKey === 'ENDLESS_WAVE') diffContainer.classList.remove('hidden');
+          else diffContainer.classList.add('hidden');
+        });
+      });
+
+      document.querySelectorAll('.diff-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.diff-btn').forEach(b => {
+            b.className = "diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-slate-800 text-slate-400 border border-slate-700";
+          });
+          const target = e.currentTarget;
+          target.className = "diff-btn py-1.5 rounded-lg font-orbitron font-bold text-[10px] sm:text-xs bg-cyan-600/30 border border-cyan-400 text-cyan-300";
+          endlessDifficulty = target.getAttribute('data-diff');
+        });
+      });
+
+      document.getElementById('modeNormalBtn').addEventListener('click', () => {
+        isPracticeMode = false;
+        document.getElementById('modeNormalBtn').className = "flex-1 py-2 rounded-xl font-orbitron font-bold text-xs bg-gradient-to-r from-cyan-500 to-teal-400 text-slate-950 shadow-md transition";
+        document.getElementById('modePracticeBtn').className = "flex-1 py-2 rounded-xl font-orbitron font-bold text-xs text-slate-400 hover:text-white transition";
+      });
+
+      document.getElementById('modePracticeBtn').addEventListener('click', () => {
+        isPracticeMode = true;
+        document.getElementById('modePracticeBtn').className = "flex-1 py-2 rounded-xl font-orbitron font-bold text-xs bg-gradient-to-r from-emerald-500 to-teal-500 text-slate-950 shadow-md transition";
+        document.getElementById('modeNormalBtn').className = "flex-1 py-2 rounded-xl font-orbitron font-bold text-xs text-slate-400 hover:text-white transition";
+      });
+
+      document.getElementById('addCheckpointBtn').addEventListener('click', () => {
+        if (gameState === 'PLAYING') {
+          checkpoints.push({
+            worldX: worldX,
+            y: player.y,
+            gravity: player.gravity,
+            isMini: player.isMini,
+            speedMultiplier: player.speedMultiplier
+          });
+        }
+      });
+
+      document.getElementById('removeCheckpointBtn').addEventListener('click', () => {
+        if (checkpoints.length > 0) checkpoints.pop();
+      });
+
+      document.getElementById('fullscreenBtn').addEventListener('click', () => {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen().catch(() => {});
+        } else {
+          document.exitFullscreen().catch(() => {});
+        }
+      });
+
+      document.getElementById('startPlayBtn').addEventListener('click', startGame);
+      document.getElementById('pauseBtn').addEventListener('click', pauseGame);
+      document.getElementById('resumeBtn').addEventListener('click', resumeGame);
+      document.getElementById('restartPauseBtn').addEventListener('click', startGame);
+      document.getElementById('menuPauseBtn').addEventListener('click', showMenu);
+      document.getElementById('retryBtn').addEventListener('click', () => { attemptCounter++; startGame(); });
+      document.getElementById('menuBtn').addEventListener('click', showMenu);
+
+      document.getElementById('soundToggleBtn').addEventListener('click', () => {
+        const isMuted = audioEngine.toggleMute();
+        const icon = document.getElementById('soundIcon');
+        if (isMuted) {
+          icon.className = 'fa-solid fa-volume-xmark text-slate-500';
+          audioEngine.stopMusic();
+        } else {
+          icon.className = 'fa-solid fa-volume-high text-cyan-400';
+          if (gameState === 'PLAYING') audioEngine.startMusic();
+        }
+      });
+    }
+
+    const OFFICIAL_LEVELS = {
+      WAVE_MADNESS: { title: 'Wave Madness', speed: 7.0, length: 9000, generator: generateWaveMadness },
+      POLARGEIST_WAVE: { title: 'Polargeist Wave', speed: 9.0, length: 12000, generator: generatePolargeistWave },
+      DEADLOCKED_WAVE: { title: 'Deadlocked Wave', speed: 11.0, length: 15000, generator: generateDeadlockedWave },
+      ENDLESS_WAVE: { title: 'Endless Wave', speed: 8.5, length: 999999, generator: generateEndlessWaveChunk }
+    };
+
+    function startGame() {
+      gameState = 'PLAYING';
+      worldX = 0;
+      checkpoints = [];
+
+      const levelInfo = OFFICIAL_LEVELS[selectedLevelKey];
+      baseSpeed = levelInfo.speed;
+      levelLength = levelInfo.length;
+
+      levelInfo.generator();
+
+      player.x = canvas.width * 0.22;
+      player.y = canvas.height / 2;
+      player.gravity = 1;
+      player.isMini = false;
+      player.hitboxRadius = 7.5;
+      player.speedMultiplier = 1.0;
+      player.trail = [];
+      player.isHolding = false;
+
+      document.getElementById('hudLevelName').innerText = levelInfo.title;
+      document.getElementById('hudSpeedText').innerText = '1.0x';
+      document.getElementById('mainMenu').classList.add('hidden');
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('pauseModal').classList.add('hidden');
+      document.getElementById('hudOverlay').classList.remove('hidden');
+      document.getElementById('pauseBtn').classList.remove('hidden');
+
+      if (isPracticeMode) {
+        document.getElementById('practiceControls').classList.remove('hidden');
+        document.getElementById('practiceModeSubtext').classList.remove('hidden');
+      } else {
+        document.getElementById('practiceControls').classList.add('hidden');
+        document.getElementById('practiceModeSubtext').classList.add('hidden');
+      }
+
+      const banner = document.getElementById('attemptBanner');
+      document.getElementById('attemptBannerText').innerText = `ESSAI ${attemptCounter}`;
+      banner.classList.remove('hidden');
+      banner.classList.add('animate-attempt');
+      setTimeout(() => {
+        banner.classList.add('hidden');
+        banner.classList.remove('animate-attempt');
+      }, 1600);
+
+      if (audioEngine) audioEngine.startMusic();
+    }
+
+    function pauseGame() {
+      if (gameState !== 'PLAYING') return;
+      gameState = 'PAUSED';
+      if (audioEngine) audioEngine.stopMusic();
+      document.getElementById('pauseModal').classList.remove('hidden');
+    }
+
+    function resumeGame() {
+      if (gameState !== 'PAUSED') return;
+      gameState = 'PLAYING';
+      document.getElementById('pauseModal').classList.add('hidden');
+      if (audioEngine) audioEngine.startMusic();
+    }
+
+    function showMenu() {
+      gameState = 'MENU';
+      attemptCounter = 1;
+      if (audioEngine) audioEngine.stopMusic();
+
+      document.getElementById('mainMenu').classList.remove('hidden');
+      document.getElementById('gameOverModal').classList.add('hidden');
+      document.getElementById('pauseModal').classList.add('hidden');
+      document.getElementById('hudOverlay').classList.add('hidden');
+      document.getElementById('pauseBtn').classList.add('hidden');
+      document.getElementById('practiceControls').classList.add('hidden');
+
+      updateLevelBestScores();
+    }
+
+    function updateLevelBestScores() {
+      Object.keys(OFFICIAL_LEVELS).forEach(key => {
+        const best = localStorage.getItem(`gd_best_${key}`) || '0';
+        const el = document.getElementById(`best_${key}`);
+        if (el) el.innerText = key === 'ENDLESS_WAVE' ? `${best}0m` : `${best}%`;
+      });
+    }
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initApp() {
+      canvas = document.getElementById('gameCanvas');
+      ctx = canvas.getContext('2d');
+      previewCanvas = document.getElementById('previewCanvas');
+      previewCtx = previewCanvas.getContext('2d');
+
+      audioEngine = new WaveAudioEngine();
+
+      resizeCanvas();
+      window.addEventListener('resize', resizeCanvas);
+
+      setupGarageUI();
+      setupControls();
+      showMenu();
+
+      requestAnimationFrame(gameLoop);
+    }
+
+    window.addEventListener('load', initApp);
+  </script>
+</body>
+</html>
